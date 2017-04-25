@@ -1,0 +1,3 @@
+package hpcsimulator;
+
+@license(LGPL);
