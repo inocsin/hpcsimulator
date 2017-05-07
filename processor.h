@@ -44,8 +44,6 @@ class Processor : public cSimpleModule
     long flitByHop; //用于计算链路利用率, flit * Hop
     bool dropFlag; //判断本轮是否drop过
 
-//    double headFlitGenTime; //head flit的产生时间，用于计算package delay
-//    int packageDelayCount; //对到达的package的flit进行计数
     int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
     cQueue txQueue; //发送数据队列
 
@@ -70,7 +68,7 @@ class Processor : public cSimpleModule
     virtual double Poisson();
     virtual double Uniform();
     // The finish() function is called by OMNeT++ at the end of the simulation:
-    virtual void finish() override;
+    virtual void finish() override; //需要把processor buffer中的pkt给析构掉
 
     //纯虚函数，由子类实现
     virtual int ppid2plid(int ppid) = 0;

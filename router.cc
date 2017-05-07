@@ -454,6 +454,6 @@ void Router::finish()
 
     double routerPower = getRouterPower();
     EV <<"Router power: " << routerPower <<endl;
-    recordScalar("router power", routerPower);
+    recordScalar("routerPower", routerPower);
 }
 

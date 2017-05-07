@@ -111,7 +111,7 @@ class Router : public cSimpleModule
     virtual simtime_t channelAvailTime(int port_num);
     virtual double getRouterPower();//计算路由器功耗
     // The finish() function is called by OMNeT++ at the end of the simulation:
-    virtual void finish() override;
+    virtual void finish() override; //需要对router buffer中的pkt析构
 
     //纯虚函数，根据具体的拓扑来实现
     virtual int ppid2plid(int ppid) = 0;
@@ -125,6 +125,5 @@ class Router : public cSimpleModule
 };
 
 //Define_Module(Router);
-
 
 #endif /* ROUTER_H_ */

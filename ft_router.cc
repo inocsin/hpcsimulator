@@ -6,6 +6,7 @@
  */
 
 #include "router.h"
+#include "fat_tree.h"
 
 class FtRouter : public Router {
 
@@ -35,7 +36,7 @@ int FtRouter::getNextRouterPort(int current_out_port){
     int k;//下一个Router的接受端口
     if(!lowerRouter){//上层的Router
         if(level==0){
-            k=0;//level==0时，为上端口，因此msg发到processor，而processor只有一个端口，默认processor的接受端口为0
+            k=0;//level==0时，为上端口，因此msg发到processor，而processor只有一个端口，默认processor的接收端口为0
         }else{
             int lowLevel=level-1;//下层的level
             k = (ctmp/((int) pow(100,lowLevel)))%100+PortNum/2;

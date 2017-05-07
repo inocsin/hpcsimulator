@@ -34,6 +34,8 @@ OBJS = \
     $O/ft_router.o \
     $O/processor.o \
     $O/router.o \
+    $O/simple_processor.o \
+    $O/simple_router.o \
     $O/buffer_info_m.o \
     $O/data_pkt_m.o
 
@@ -141,26 +143,35 @@ $O/data_pkt_m.o: data_pkt_m.cc \
 $O/ft_processor.o: ft_processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	hpc.h \
+	fat_tree.h \
 	processor.h \
 	topoconfig.h
 $O/ft_router.o: ft_router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	hpc.h \
+	fat_tree.h \
 	router.h \
 	tech_power.h \
 	topoconfig.h
 $O/processor.o: processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	hpc.h \
 	processor.h \
 	topoconfig.h
 $O/router.o: router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	hpc.h \
+	router.h \
+	tech_power.h \
+	topoconfig.h
+$O/simple_processor.o: simple_processor.cc \
+	buffer_info_m.h \
+	data_pkt_m.h \
+	processor.h \
+	topoconfig.h
+$O/simple_router.o: simple_router.cc \
+	buffer_info_m.h \
+	data_pkt_m.h \
 	router.h \
 	tech_power.h \
 	topoconfig.h

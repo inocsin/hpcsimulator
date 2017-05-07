@@ -8,38 +8,24 @@
 #ifndef TOPOCONFIG_H_
 #define TOPOCONFIG_H_
 
-#include "hpc.h"
 
-#ifdef FAT_TREE_
 //网络拓扑参数
-#define PortNum 16
-#define LevelNum 3
-#define ProcessorNum 1024
-#define SwitchNum 320
-#define SwTop 64
-#define SwLower 256
-#define SwLowEach 128
-
-#elif defined TORUS_
-
-#elif defined TREE_
-
-#endif
-
+#define PortNum 24
+#define ProcessorNum 24
 
 //#define LinkNum 48 //双向链路乘以2，用于功耗仿真
 //曙光5000相关参数，16端口，3虚通道，MTU 1KB，Buffer 4MTU
 
-#define PacketSize 1000 //Byte为单位
-#define FlitSize 200 //Byte为单位
-#define FlitLength 5 // PacketSize / FlitSize， FlitLength必须大于等于2，否则processor产生的数据包会发生错误
+#define PacketSize 128 //Byte为单位
+#define FlitSize 4 //Byte为单位
+#define FlitLength 32 // PacketSize / FlitSize， FlitLength必须大于等于2，否则processor产生的数据包会发生错误
 
 #define VC 3 //virtual channel
 #define BufferDepth 4 * FlitLength //virtual channel buffer depth, 大于等于2，可存放Flit的数量
 #define ProcessorBufferDepth 4 * FlitLength // processor txQueue 的大小
 
 //时钟相关参数
-#define FREQ 1e8  //用于功耗仿真，单位hz
+#define FREQ 3500000000.0  //用于功耗仿真，单位hz
 #define CLK_CYCLE 1/FREQ //时钟周期
 #define Sim_Start_Time 1 //1s 开始仿真
 #define TimeScale 0.1 //不改，用于泊松分布和自相似分布，如lambda=10，表示1s内10个flit，得到的时间间隔除以TimeScale再round取整
@@ -50,7 +36,7 @@
 
 //Time Distribution
 //#define SELF_SIMILARITY //自相似分布
-#define POISSON_DIST //采用泊松分布
+//#define POISSON_DIST //采用泊松分布
 
 //自相似和泊松分布的取值范围小于10，单位时间为1s，但TimeScale会进行换算，最后乘以时钟周期
 //自相似和泊松分布的参数
@@ -62,7 +48,7 @@
 //Poisson分布参数
 #define LAMBDA 7 //泊松分布中用于产生时间间隔的指数分布的lambda，表示单位时间内(1s)到达的帧数，其倒数为时间间隔的平均值
 //Uniform分布参数
-#define INJECTION_RATE 0.3 //注入率，范围在0.1 - 1之间
+#define INJECTION_RATE 0.1 //注入率，范围在0.1 - 1之间
 
 //调试信息
 #define Verbose 1

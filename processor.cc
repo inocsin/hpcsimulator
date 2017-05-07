@@ -39,7 +39,7 @@ void Processor::initialize()
     //WATCH(numReceived);
     //WATCH(numPktDropped);
 
-    hopCountVector.setName("HopCount");
+    hopCountVector.setName("hopCount");
     flitDelayTime.setName("flitDelayTime");
     packageDelayTime.setName("packageDelayTime");
 
@@ -104,7 +104,7 @@ void Processor::handleMessage(cMessage *msg)
                                 EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Head Flit>>>>>>>>>>\n";
                                 EV << msg << endl;
                             }
-                        } else if(i == FlitLength - 1){
+                        } else if(i == FlitLength - 1) {
                             DataPkt* msg = generateMessage(false, true, FlitLength, i, bestVCID);
                             txQueue.insert(msg);
                             if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
@@ -376,17 +376,17 @@ void Processor::finish()
     //EV << "Hop count, mean:   " << hopCountStats.getMean() << endl;
     //EV << "Hop count, stddev: " << hopCountStats.getStddev() << endl;
 
-    recordScalar("#flit sent", numFlitSent);
-    recordScalar("#package sent", numPackageSent);
-    recordScalar("#flit received", numFlitReceived);
-    recordScalar("#package received", numPackageReceived);
-    recordScalar("#packet dropped", numPktDropped);
-    recordScalar("#flitByHop", flitByHop);
+    recordScalar("flitSent", numFlitSent);
+    recordScalar("packageSent", numPackageSent);
+    recordScalar("flitReceived", numFlitReceived);
+    recordScalar("packageReceived", numPackageReceived);
+    recordScalar("packetDropped", numPktDropped);
+    recordScalar("flitByHop", flitByHop);
 
 
     if(getIndex() == 0) {
-        double timeCount = simTime().dbl() - Sim_Start_Time;
-        recordScalar("#timeCount", timeCount);
+        double timeCount = (simTime().dbl() - Sim_Start_Time) / CLK_CYCLE;
+        recordScalar("timeCount", timeCount);
     }
 
 }
