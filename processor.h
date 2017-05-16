@@ -40,7 +40,7 @@ class Processor : public cSimpleModule
     long numPackageSent;
     long numFlitReceived;
     long numPackageReceived;
-    long numPktDropped; //
+    long numPktDropped; //丢弃的数据包
     long flitByHop; //用于计算链路利用率, flit * Hop
     bool dropFlag; //判断本轮是否drop过
 

@@ -130,6 +130,7 @@ void Processor::handleMessage(cMessage *msg)
 
                 }else{//要产生新的package，但是buffer空间不够，drop掉该package
                     numPktDropped++;
+
                     dropFlag = true; //如果drop了一个packet的，则置为1，进入下面的定时时，会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
 
                 }
@@ -350,15 +351,20 @@ void Processor::forwardMessage(DataPkt *msg)
 
 double Processor::Poisson() {
     double exp_time = exponential((double)1.0/LAMBDA);
-    exp_time = round(exp_time / TimeScale) * CLK_CYCLE;
+//    exp_time = round(exp_time / TimeScale) * CLK_CYCLE * FlitLength;
+    exp_time = (exp_time / TimeScale) * CLK_CYCLE * FlitLength;
     if(exp_time < CLK_CYCLE) {
         exp_time = CLK_CYCLE;
     }
-    return exp_time * FlitLength; //由于一次性产生FlitLength个Flit，因此时间间隔为FlitLength的倍数，否则txQueue会爆
+    return exp_time; //由于一次性产生FlitLength个Flit，因此时间间隔为FlitLength的倍数，否则txQueue会爆
 }
 
 double Processor::Uniform() {
-    double time = round(1.0 / INJECTION_RATE) * CLK_CYCLE * FlitLength;
+//    double time = round(1.0 / INJECTION_RATE) * CLK_CYCLE * FlitLength;
+    double time = (1.0 / INJECTION_RATE) * CLK_CYCLE * FlitLength;
+    if(time < CLK_CYCLE) {
+        time = CLK_CYCLE;
+    }
     return time;
 }
 
@@ -385,7 +391,7 @@ void Processor::finish()
 
 
     if(getIndex() == 0) {
-        double timeCount = (simTime().dbl() - Sim_Start_Time) / CLK_CYCLE;
+        double timeCount = (simTime().dbl() - Sim_Start_Time) / (CLK_CYCLE);
         recordScalar("timeCount", timeCount);
     }
 

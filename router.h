@@ -16,6 +16,8 @@
 #include "buffer_info_m.h"
 #include "topoconfig.h"
 #include "tech_power.h"
+#include <time.h>
+#include <windows.h>
 
 using namespace omnetpp;
 
@@ -96,6 +98,9 @@ class Router : public cSimpleModule
 
     double RouterPower;
     double flitReceived; //”√”⁄º∆À„toggle rate
+
+    //time
+    clock_t t_start_h, t_end_h, t_max_h, t_start_r, t_end_r, t_max_r, t_handleMessage, t_router, t_totalTime;
 
 
   public:

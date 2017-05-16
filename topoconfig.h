@@ -9,6 +9,8 @@
 #define TOPOCONFIG_H_
 
 
+/*
+//tianhe_router
 //网络拓扑参数
 #define PortNum 24
 #define ProcessorNum 24
@@ -26,10 +28,26 @@
 
 //时钟相关参数
 #define FREQ 3500000000.0  //用于功耗仿真，单位hz
+
+*/
+
+//fattree
+#define PortNum 16
+#define ProcessorNum 1024
+#define LinkNum 6144
+#define PacketSize 128
+#define FlitSize 4
+#define FlitLength 32
+#define VC 3
+#define BufferDepth 4 * FlitLength
+#define ProcessorBufferDepth 4 * FlitLength
+#define FREQ 3500000000.0
+
+//******************以下手工修改，以上自动生成*******************8
+
 #define CLK_CYCLE 1/FREQ //时钟周期
 #define Sim_Start_Time 1 //1s 开始仿真
 #define TimeScale 0.1 //不改，用于泊松分布和自相似分布，如lambda=10，表示1s内10个flit，得到的时间间隔除以TimeScale再round取整
-
 
 //Spatial Distribution
 #define UNIFORM //空间均匀分布
@@ -48,12 +66,14 @@
 //Poisson分布参数
 #define LAMBDA 7 //泊松分布中用于产生时间间隔的指数分布的lambda，表示单位时间内(1s)到达的帧数，其倒数为时间间隔的平均值
 //Uniform分布参数
-#define INJECTION_RATE 0.1 //注入率，范围在0.1 - 1之间
+#define INJECTION_RATE 1.8 //注入率，范围在0.1 - 1之间
 
 //调试信息
 #define Verbose 1
 #define VERBOSE_DEBUG_MESSAGES 1
 #define VERBOSE_DETAIL_DEBUG_MESSAGES 2
+
+
 
 //功耗相关参数
 //晶体管工艺参数

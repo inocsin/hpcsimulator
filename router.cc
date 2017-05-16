@@ -49,17 +49,22 @@ void Router::initialize()
 
     RouterPower = 0;
     flitReceived = 0;
+    clock_t t_start_h = t_end_h = t_max_h = t_start_r = t_end_r = t_max_r = 0;
+    t_handleMessage = 0;
+    t_router = 0;
+    t_totalTime = clock();
 
 }
 
 void Router::handleMessage(cMessage *msg)
 {
+    t_start_h = clock();
 
     if (msg->isSelfMessage()) {
         //****************仲裁定时****************************
 
-        if(msg==selfMsgAlloc){//自消息为仲裁定时消息
-
+        if(msg == selfMsgAlloc){//自消息为仲裁定时消息
+            t_start_r = clock();
             scheduleAt(simTime()+CLK_CYCLE, selfMsgAlloc);
 
             //Step 2. Routing Logic
@@ -264,7 +269,11 @@ void Router::handleMessage(cMessage *msg)
                 forwardBufferInfoMsg(bufferInfoMsg, i);
 
             }
-
+            t_end_r = clock();
+            if(t_end_r - t_start_r > t_max_r) {
+                t_max_r = t_end_r - t_start_r;
+            }
+            t_router += t_end_r - t_start_r;
         } // end of selfMsgAlloc
 
     } // end of selfMsg
@@ -312,6 +321,11 @@ void Router::handleMessage(cMessage *msg)
 
     } // end of Not self msg
 
+    t_end_h = clock();
+    if(t_end_h - t_start_h > t_max_h) {
+        t_max_h = t_end_h - t_start_h;
+    }
+    t_handleMessage += t_end_h - t_start_h;
 }
 
 
@@ -455,5 +469,13 @@ void Router::finish()
     double routerPower = getRouterPower();
     EV <<"Router power: " << routerPower <<endl;
     recordScalar("routerPower", routerPower);
+    if(getIndex() == 0) {
+        t_totalTime = clock() - t_totalTime;
+        recordScalar("realTotalTime", (long) t_totalTime);
+    }
+    recordScalar("realTotalHandleMessageTime", (long) t_handleMessage);
+    recordScalar("realRouterTime", (long) t_router);
+    recordScalar("realMaxHandleMessagetime", (long) t_max_h);
+    recordScalar("realMaxRouterTime", (long) t_max_r);
 }
 
