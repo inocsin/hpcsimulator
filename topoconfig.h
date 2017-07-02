@@ -31,10 +31,8 @@
 
 */
 
-//fattree
-#define PortNum 16
-#define ProcessorNum 1024
-#define LinkNum 6144
+#define PortNum 24
+#define ProcessorNum 24
 #define PacketSize 128
 #define FlitSize 4
 #define FlitLength 32
