@@ -77,7 +77,9 @@ class Router : public cSimpleModule
     //Step 1. Input Buffer
     //Input Buffer, Output Buffer, VC State
     DataPkt* InputBuffer[PortNum][VC][BufferDepth]; //输入端口virtual channel的buffer,里面存放收到的Flit信息
-    DataPkt* OutputBuffer[PortNum][VC]; //输出端口的virtual channel的buffer，深度为1
+    DataPkt* OutputBuffer[PortNum][VC][OutBufferDepth]; //输出端口的virtual channel的buffer，深度为OutBufferDepth，深度用来表示router path-through latency
+
+
 
     //Step 2. Routing Logic
     int RCInputVCState[PortNum][VC]; //-1代表没有分配结果，即对应的vc没有数据，否则表示被分配的output vc标号，port_number * vc + vc_id
@@ -86,7 +88,7 @@ class Router : public cSimpleModule
     //Step 3. Virtual Channel Allocation
     int VAOutputVCState[PortNum][VC]; //-1代表output vc闲置，否则表示被分配的input vc标号，port_number * vc + vc_id，输出端口vc被锁住后，下一跳的输入端口对应的vc就被锁住
     int VAOutputVCStatePre[PortNum][VC]; //记录上一次仲裁胜利的输入端口虚通道标号，用于Round Robin仲裁法
-    bool VAInputVCState[PortNum][VC]; //0代表VCA失败，1代表VCA成功，请求的output vc在RCInputVCState中
+    bool VAInputVCState[PortNum][VC]; //false代表VCA失败，true代表VCA成功，请求的output vc在RCInputVCState中
 
 
     //Step 4. Switch Arbitration

@@ -29,7 +29,10 @@ void Router::initialize()
         SAInputWinVcid[i] = -1;
         SAOutputWin[i] = -1;
         for(int j = 0; j < VC; j++) {
-            OutputBuffer[i][j] = nullptr;
+            for(int k = 0; k < OutBufferDepth; k++) {
+                OutputBuffer[i][j][k] = nullptr;
+            }
+
             RCInputVCState[i][j] = -1;
             BufferConnectCredit[i][j] = BufferDepth;
             VAOutputVCState[i][j] = -1;
@@ -49,7 +52,7 @@ void Router::initialize()
 
     RouterPower = 0;
     flitReceived = 0;
-    clock_t t_start_h = t_end_h = t_max_h = t_start_r = t_end_r = t_max_r = 0;
+    t_start_h = t_end_h = t_max_h = t_start_r = t_end_r = t_max_r = 0;
     t_handleMessage = 0;
     t_router = 0;
     t_totalTime = clock();
@@ -64,10 +67,11 @@ void Router::handleMessage(cMessage *msg)
         //****************仲裁定时****************************
 
         if(msg == selfMsgAlloc){//自消息为仲裁定时消息
-            t_start_r = clock();
+
             scheduleAt(simTime()+CLK_CYCLE, selfMsgAlloc);
 
             //Step 2. Routing Logic
+            //计算每个packet的输出端口及输出vcid
             for(int i = 0; i < PortNum; i++) {
                 for(int j = 0; j < VC; j++) {
                     DataPkt* current_pkt = InputBuffer[i][j][0];
@@ -83,6 +87,9 @@ void Router::handleMessage(cMessage *msg)
                 }
             }
 
+            //开始对部分模块进行计时
+            t_start_r = clock();
+
             //Step 3. Virtual Channel Allocation
             //每一个输出端口的每一个virtual channel要对每个输入端口的每个virtual channel进行仲裁，只有一个胜利
             //外循环，对每个output virtual channel进行循环
@@ -96,7 +103,7 @@ void Router::handleMessage(cMessage *msg)
                     for(; count < total && flag == false; count++, port_vc++) {
                         int m = (port_vc / VC) % PortNum;
                         int n = port_vc % VC;
-                        if(RCInputVCState[m][n] == i * VC + j) {//该输入虚通道里面的数据一定是head flit
+                        if(RCInputVCState[m][n] == i * VC + j) {//该输入虚通道里面的数据一定是head flit, 否则上面if语句会跳过
                             if(VAInputVCState[m][n] == true) {
                                 EV << "Error: Step 3. VC Allocation >> ROUTER: " << getIndex()<<"("<<swpid2swlid(getIndex()) << "), VAInputVCState != false" << endl;
                             }
@@ -122,12 +129,12 @@ void Router::handleMessage(cMessage *msg)
                 bool flag = false;
                 for(int j = 0; j < VC && flag == false; j++, last_vcid++) {
                     int cur_vcid = last_vcid % VC; //Round Robin
-                    //必须保证输入虚通道在虚通道仲裁中胜利（即输出虚通道为次输入虚通道保留）
+                    //必须保证输入虚通道在虚通道仲裁中胜利（即输出虚通道为此输入虚通道保留）
                     //此外还需要保证输入buffer有数据，可能head flit传输胜利，但是body flit还没过来
-                    if(VAInputVCState[i][cur_vcid] == true && InputBuffer[i][cur_vcid][0] != nullptr) { //之前写成InputBuffer[i][cur_vcid] != nullptr，查了3天，泪崩
+                    if(VAInputVCState[i][cur_vcid] == true && InputBuffer[i][cur_vcid][0] != nullptr) { //之前写成InputBuffer[i][cur_vcid] != nullptr，查了3天，泪崩，需要判断输入buffer是否有数据，可能堵在前一跳路由器
                         int port = RCInputVCState[i][cur_vcid] / VC;
                         int out_vcid = RCInputVCState[i][cur_vcid] % VC;
-                        if(OutputBuffer[port][out_vcid] == nullptr) {
+                        if(OutputBuffer[port][out_vcid][OutBufferDepth-1] == nullptr) { //判断输出buffer有空间
                             SAInputWinVcid[i] = cur_vcid;
                             flag = true;
                             if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
@@ -149,6 +156,7 @@ void Router::handleMessage(cMessage *msg)
                 bool flag = false;
                 for(int j = 0; j < PortNum && flag == false; j++, last_inport++) {
                     int cur_inport = last_inport % PortNum;
+                    //SAInputWinVcid[cur_inport] != -1保证输入有数据，输出有buffer
                     if(SAInputWinVcid[cur_inport] != -1) {
                         int inport_vcid = SAInputWinVcid[cur_inport];
                         int out_port = RCInputVCState[cur_inport][inport_vcid] / VC;
@@ -178,13 +186,14 @@ void Router::handleMessage(cMessage *msg)
                 int output_vcid = RCInputVCState[inport][inport_vcid] % VC;
                 DataPkt* current_pkt = InputBuffer[inport][inport_vcid][0];
 
-                //修改VCID
+
                 //有可能body flit还没传输过来，导致current_pkt == nullptr
                 //可能有bug
                 if(current_pkt == nullptr) {
                     EV << "Error in Step 5. Switch Traversal in Router " << getIndex() << ", current_pkt is null" << endl;
                     continue;
                 }
+                //修改VCID
                 current_pkt->setVc_id(output_vcid);
 
                 //对输入缓存进行shift
@@ -193,7 +202,11 @@ void Router::handleMessage(cMessage *msg)
                 }
                 InputBuffer[inport][inport_vcid][BufferDepth-1] = nullptr;
                 //将数据放到输出buffer
-                OutputBuffer[i][output_vcid] = current_pkt;
+                if(OutputBuffer[i][output_vcid][OutBufferDepth-1] != nullptr) {
+                    EV << "Error in Step 5. Switch Traversal in Router, OutputBuffer != nullptr " << getIndex() << ", current_pkt is null" << endl;
+
+                }
+                OutputBuffer[i][output_vcid][OutBufferDepth-1] = current_pkt;
 
                 //每转发input buffer里面的一个flit，就产生一个流控信号，通知上游router，进行increment credit操作
                 //先将bufferInfoMsg放入Queue中，由于和Data Pkt共用一个信道，容易发生阻塞，需要队列保存数据
@@ -225,21 +238,29 @@ void Router::handleMessage(cMessage *msg)
 
             }
 
+            //结束部分模块的计时
+            t_end_r = clock();
+            if(t_end_r - t_start_r > t_max_r) {
+                t_max_r = t_end_r - t_start_r;
+            }
+            t_router += t_end_r - t_start_r;
+
             //Step 6. Forward Data Message
             //发送数据，需要检查信道是否空闲以及
             for(int i = 0; i < PortNum; i++) {
                 if(channelAvailTime(i) <= simTime()) {
                     bool flag = false;
                     for(int j = 0; j < VC && flag == false; j++) {
-                        if(OutputBuffer[i][j] != nullptr && BufferConnectCredit[i][j] != 0) {
+                        if(OutputBuffer[i][j][0] != nullptr && BufferConnectCredit[i][j] != 0) {
                             flag = true;
-                            DataPkt* forward_msg = OutputBuffer[i][j];
+                            DataPkt* forward_msg = OutputBuffer[i][j][0];
 
                             //对状态寄存器进行重置
-                            OutputBuffer[i][j] = nullptr;
+                            OutputBuffer[i][j][0] = nullptr;
                             if(!connectToProcessor(i)) { //与路由器相连
                                 BufferConnectCredit[i][j]--;
                             }
+                            //判断是否为tail
                             if(forward_msg->getIsTail() == true) {
                                 VAOutputVCState[i][j] = -1;
                                 if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
@@ -269,11 +290,19 @@ void Router::handleMessage(cMessage *msg)
                 forwardBufferInfoMsg(bufferInfoMsg, i);
 
             }
-            t_end_r = clock();
-            if(t_end_r - t_start_r > t_max_r) {
-                t_max_r = t_end_r - t_start_r;
+
+            //Step 8. Shift OutputBuffer
+            for(int i = 0; i < PortNum; i++) {
+                for(int j = 0; j < VC; j++) {
+                    for(int k = 0; k < OutBufferDepth; k++) {
+                        if(OutputBuffer[i][j][k] != nullptr && k > 0 && OutputBuffer[i][j][k-1] == nullptr) {
+                            OutputBuffer[i][j][k-1] = OutputBuffer[i][j][k];
+                            OutputBuffer[i][j][k] = nullptr;
+                        }
+                    }
+                }
             }
-            t_router += t_end_r - t_start_r;
+
         } // end of selfMsgAlloc
 
     } // end of selfMsg
@@ -471,7 +500,7 @@ void Router::finish()
     recordScalar("routerPower", routerPower);
     if(getIndex() == 0) {
         t_totalTime = clock() - t_totalTime;
-        recordScalar("realTotalTime", (long) t_totalTime);
+        recordScalar("realTotalTime", (long) t_totalTime); // 单位是ms
     }
     recordScalar("realTotalHandleMessageTime", (long) t_handleMessage);
     recordScalar("realRouterTime", (long) t_router);

@@ -42,6 +42,7 @@
 #define BufferDepth 4 * FlitLength
 #define ProcessorBufferDepth 4 * FlitLength
 #define FREQ 3500000000.0
+#define OutBufferDepth 29
 
 //******************以下手工修改，以上自动生成*******************8
 
