@@ -88,7 +88,7 @@ void Processor::handleMessage(cMessage *msg)
 
         }else if(msg == selfMsgGenMsg){
 
-            //if(getIndex() == 0){ //processor产生msg的模式,需要改进
+//            if(getIndex() == 0){ //processor产生msg的模式,需要改进
             if (true) {
 
                 //**********************产生flit*****************************
