@@ -42,6 +42,7 @@ void Processor::initialize()
     hopCountVector.setName("hopCount");
     flitDelayTime.setName("flitDelayTime");
     packageDelayTime.setName("packageDelayTime");
+    creditMsgDelayTime.setName("creditMsgDelayTime");
 
     selfMsgSendMsg = new cMessage("selfMsgSendMsg");//注意顺序，先发送buffer里面的msg，再产生新的msg，这样一个flit需要2个周期才会发出去
     scheduleAt(Sim_Start_Time, selfMsgSendMsg);
@@ -62,7 +63,7 @@ void Processor::handleMessage(cMessage *msg)
 {
     if (msg->isSelfMessage()) {
         //********************发送新数据的自定时消息********************
-        if(msg == selfMsgSendMsg){
+        if(msg == selfMsgSendMsg) {
             //****************************转发flit**************************
             if(!txQueue.isEmpty()){ //发送队列有数据
                 DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
@@ -178,6 +179,10 @@ void Processor::handleMessage(cMessage *msg)
                     ", Received MSG: { "<<bufferInfoMsg<<" }\n";
                 EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
             }
+
+            simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
+            creditMsgDelayTime.record(credit_msg_delay.dbl());
+
 
             delete bufferInfoMsg;
 

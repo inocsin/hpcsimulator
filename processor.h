@@ -51,6 +51,7 @@ class Processor : public cSimpleModule
     cOutVector hopCountVector;
     cOutVector flitDelayTime;
     cOutVector packageDelayTime;
+    cOutVector creditMsgDelayTime;
 
   public:
     Processor();
