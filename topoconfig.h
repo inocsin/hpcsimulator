@@ -31,8 +31,9 @@
 
 */
 
-#define PortNum 24
-#define ProcessorNum 24
+#define PortNum 16
+#define ProcessorNum 1024
+#define LinkNum 6144
 #define PacketSize 128
 #define FlitSize 4
 #define FlitLength 32
@@ -40,8 +41,7 @@
 #define BufferDepth 4 * FlitLength
 #define ProcessorBufferDepth 4 * FlitLength
 #define FREQ 3500000000.0
-#define OutBufferDepth 351
-//#define OutBufferDepth 2
+#define OutBufferDepth 1751
 
 //******************以下手工修改，以上自动生成*******************8
 
@@ -66,7 +66,7 @@
 //Poisson分布参数
 #define LAMBDA 7 //泊松分布中用于产生时间间隔的指数分布的lambda，表示单位时间内(1s)到达的帧数，其倒数为时间间隔的平均值
 //Uniform分布参数
-#define INJECTION_RATE 1.0 //注入率，范围在0.1 - 1之间
+#define INJECTION_RATE 0.1 //注入率，范围在0.1 - 1之间
 
 //调试信息
 #define Verbose 1
