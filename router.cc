@@ -241,10 +241,13 @@ void Router::handleMessage(cMessage *msg)
 
             //结束部分模块的计时
             t_end_r = clock();
-            if(t_end_r - t_start_r > t_max_r) {
-                t_max_r = t_end_r - t_start_r;
+            if (simTime().dbl() > RecordStartTime) {
+                if(t_end_r - t_start_r > t_max_r) {
+                    t_max_r = t_end_r - t_start_r;
+                }
+                t_router += t_end_r - t_start_r;
             }
-            t_router += t_end_r - t_start_r;
+
 
             //Step 6. Forward Data Message
             //发送数据，需要检查信道是否空闲以及
@@ -337,7 +340,9 @@ void Router::handleMessage(cMessage *msg)
             //**********************收到其他端口的DataPkt数据消息*******************
 
             DataPkt *datapkt = check_and_cast<DataPkt*>(msg);
-            flitReceived += 1;
+            if (simTime().dbl() > RecordStartTime) {
+                flitReceived += 1;
+            }
 
             //Step 1. Input Buffer
             //决定放到哪个input port的virtual channel
@@ -361,10 +366,14 @@ void Router::handleMessage(cMessage *msg)
     } // end of Not self msg
 
     t_end_h = clock();
-    if(t_end_h - t_start_h > t_max_h) {
-        t_max_h = t_end_h - t_start_h;
+
+    if (simTime().dbl() > RecordStartTime) {
+        if(t_end_h - t_start_h > t_max_h) {
+            t_max_h = t_end_h - t_start_h;
+        }
+        t_handleMessage += t_end_h - t_start_h;
     }
-    t_handleMessage += t_end_h - t_start_h;
+
 }
 
 

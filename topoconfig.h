@@ -42,6 +42,7 @@
 #define ProcessorBufferDepth 4 * FlitLength
 #define FREQ 3500000000.0
 #define OutBufferDepth 1751
+#define RecordStartTime 1.000003
 
 //******************以下手工修改，以上自动生成*******************8
 

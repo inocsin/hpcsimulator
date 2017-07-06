@@ -72,9 +72,13 @@ void Processor::handleMessage(cMessage *msg)
                     txQueue.pop();
                     forwardMessage(current_forward_msg);
                     BufferConnectCredit[vcid]--; //decrement credit count
-                    numFlitSent++;
+                    if (simTime().dbl() > RecordStartTime) {
+                        numFlitSent++;
+                    }
                     if (current_forward_msg->getIsTail() == true) {
-                        numPackageSent++;
+                        if (simTime().dbl() > RecordStartTime) {
+                            numPackageSent++;
+                        }
                     }
 
                     if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
@@ -130,9 +134,12 @@ void Processor::handleMessage(cMessage *msg)
                     }
 
                 }else{//要产生新的package，但是buffer空间不够，drop掉该package
-                    numPktDropped++;
-
-                    dropFlag = true; //如果drop了一个packet的，则置为1，进入下面的定时时，会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
+                    if (simTime().dbl() > RecordStartTime) {
+                        numPktDropped++;
+                    }
+                    //如果drop了一个packet的，则置为1，进入下面的定时时，
+                    //会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
+                    dropFlag = true;
 
                 }
 
@@ -181,7 +188,10 @@ void Processor::handleMessage(cMessage *msg)
             }
 
             simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
-            creditMsgDelayTime.record(credit_msg_delay.dbl());
+            if (simTime().dbl() > RecordStartTime) {
+                creditMsgDelayTime.record(credit_msg_delay.dbl());
+            }
+
 
 
             delete bufferInfoMsg;
@@ -200,8 +210,11 @@ void Processor::handleMessage(cMessage *msg)
             }
 
             // update statistics.
-            numFlitReceived++;
-            flitByHop += hopcount + 1; //包含最后一跳路由器到processor
+            if (simTime().dbl() > RecordStartTime) {
+                numFlitReceived++;
+                flitByHop += hopcount + 1; //包含最后一跳路由器到processor
+            }
+
 //            if (datapkt->getIsHead() == true) {
 //                packageDelayCount = datapkt->getFlitCount();
 //                headFlitGenTime = datapkt->getCreationTime().dbl(); //延时的表示方法从产生该Flit到该Flit被目标节点接收，其中包括在发送端txQueue的等待时间
@@ -215,11 +228,17 @@ void Processor::handleMessage(cMessage *msg)
 //                numPackageReceived++;
 //            }
             if(datapkt->getIsTail() == true) {
-                numPackageReceived++;
-                packageDelayTime.record(simTime().dbl() - datapkt->getPackageGenTime());
+                if (simTime().dbl() > RecordStartTime) {
+                    numPackageReceived++;
+                    packageDelayTime.record(simTime().dbl() - datapkt->getPackageGenTime());
+                }
+
             }
-            flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
-            hopCountVector.record(hopcount);
+            if (simTime().dbl() > RecordStartTime) {
+                flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
+                hopCountVector.record(hopcount);
+            }
+
 
             delete datapkt;
 
@@ -396,7 +415,7 @@ void Processor::finish()
 
 
     if(getIndex() == 0) {
-        double timeCount = (simTime().dbl() - Sim_Start_Time) / (CLK_CYCLE);
+        double timeCount = (simTime().dbl() - RecordStartTime) / (CLK_CYCLE);
         recordScalar("timeCount", timeCount);
     }
 
