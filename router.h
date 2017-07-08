@@ -17,7 +17,7 @@
 #include "topoconfig.h"
 #include "tech_power.h"
 #include <time.h>
-#include <windows.h>
+//#include <windows.h>
 
 using namespace omnetpp;
 
