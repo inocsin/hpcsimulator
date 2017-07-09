@@ -47,11 +47,20 @@ class Processor : public cSimpleModule
     int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
     cQueue txQueue; //发送数据队列
 
-    //cLongHistogram hopCountStats;
-    cOutVector hopCountVector;
-    cOutVector flitDelayTime;
-    cOutVector packageDelayTime;
-    cOutVector creditMsgDelayTime;
+//    cOutVector hopCountVector;
+//    cOutVector flitDelayTime;
+//    cOutVector packageDelayTime;
+//    cOutVector creditMsgDelayTime;
+
+    long hopCountTotal;
+    int hopCountCount;
+    double flitDelayTimeTotal;
+    int flitDelayTimeCount;
+    double packetDelayTimeTotal;
+    int packetDelayTimeCount;
+    double creditMsgDelayTimeTotal;
+    int creditMsgDelayTimeCount;
+
 
   public:
     Processor();

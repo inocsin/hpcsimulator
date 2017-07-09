@@ -34,15 +34,20 @@ void Processor::initialize()
     numPackageReceived = 0;
     numPktDropped = 0;
     flitByHop = 0;
-    //初始化行和列的参数
-    //WATCH(numSent);
-    //WATCH(numReceived);
-    //WATCH(numPktDropped);
 
-    hopCountVector.setName("hopCount");
-    flitDelayTime.setName("flitDelayTime");
-    packageDelayTime.setName("packageDelayTime");
-    creditMsgDelayTime.setName("creditMsgDelayTime");
+    hopCountTotal = 0;
+    hopCountCount = 0;
+    flitDelayTimeTotal = 0;
+    flitDelayTimeCount = 0;
+    packetDelayTimeTotal = 0;
+    packetDelayTimeCount = 0;
+    creditMsgDelayTimeTotal = 0;
+    creditMsgDelayTimeCount = 0;
+
+//    hopCountVector.setName("hopCount");
+//    flitDelayTime.setName("flitDelayTime");
+//    packageDelayTime.setName("packageDelayTime");
+//    creditMsgDelayTime.setName("creditMsgDelayTime");
 
     selfMsgSendMsg = new cMessage("selfMsgSendMsg");//注意顺序，先发送buffer里面的msg，再产生新的msg，这样一个flit需要2个周期才会发出去
     scheduleAt(Sim_Start_Time, selfMsgSendMsg);
@@ -189,7 +194,9 @@ void Processor::handleMessage(cMessage *msg)
 
             simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
             if (simTime().dbl() > RecordStartTime) {
-                creditMsgDelayTime.record(credit_msg_delay.dbl());
+//                creditMsgDelayTime.record(credit_msg_delay.dbl());
+                creditMsgDelayTimeTotal += credit_msg_delay.dbl();
+                creditMsgDelayTimeCount += 1;
             }
 
 
@@ -230,13 +237,19 @@ void Processor::handleMessage(cMessage *msg)
             if(datapkt->getIsTail() == true) {
                 if (simTime().dbl() > RecordStartTime) {
                     numPackageReceived++;
-                    packageDelayTime.record(simTime().dbl() - datapkt->getPackageGenTime());
+//                    packageDelayTime.record(simTime().dbl() - datapkt->getPackageGenTime());
+                    packetDelayTimeTotal += simTime().dbl() - datapkt->getPackageGenTime();
+                    packetDelayTimeCount += 1;
                 }
 
             }
             if (simTime().dbl() > RecordStartTime) {
-                flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
-                hopCountVector.record(hopcount);
+//                flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
+                flitDelayTimeTotal += simTime().dbl() - datapkt->getCreationTime().dbl();
+                flitDelayTimeCount += 1;
+//                hopCountVector.record(hopcount);
+                hopCountTotal += hopcount;
+                hopCountCount += 1;
             }
 
 
@@ -401,10 +414,6 @@ void Processor::finish()
     EV << "Flit Received: " << numFlitReceived << endl;
     EV << "Package Received: " << numPackageReceived << endl;
     EV << "Dropped:  " << numPktDropped << endl;
-    //EV << "Hop count, min:    " << hopCountStats.getMin() << endl;
-    //EV << "Hop count, max:    " << hopCountStats.getMax() << endl;
-    //EV << "Hop count, mean:   " << hopCountStats.getMean() << endl;
-    //EV << "Hop count, stddev: " << hopCountStats.getStddev() << endl;
 
     recordScalar("flitSent", numFlitSent);
     recordScalar("packageSent", numPackageSent);
@@ -412,6 +421,16 @@ void Processor::finish()
     recordScalar("packageReceived", numPackageReceived);
     recordScalar("packetDropped", numPktDropped);
     recordScalar("flitByHop", flitByHop);
+
+    recordScalar("hopCountTotal", hopCountTotal);
+    recordScalar("hopCountCount", hopCountCount);
+    recordScalar("flitDelayTimeTotal", flitDelayTimeTotal);
+    recordScalar("flitDelayTimeCount", flitDelayTimeCount);
+    recordScalar("packetDelayTimeTotal", packetDelayTimeTotal);
+    recordScalar("packetDelayTimeCount", packetDelayTimeCount);
+    recordScalar("creditMsgDelayTimeTotal", creditMsgDelayTimeTotal);
+    recordScalar("creditMsgDelayTimeCount", creditMsgDelayTimeCount);
+
 
 
     if(getIndex() == 0) {

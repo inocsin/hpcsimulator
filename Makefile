@@ -144,35 +144,29 @@ $O/ft_processor.o: ft_processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	fat_tree.h \
-	processor.h \
-	topoconfig.h
+	processor.h
 $O/ft_router.o: ft_router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	fat_tree.h \
 	router.h \
-	tech_power.h \
-	topoconfig.h
+	tech_power.h
 $O/processor.o: processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	processor.h \
-	topoconfig.h
+	processor.h
 $O/router.o: router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	router.h \
-	tech_power.h \
-	topoconfig.h
+	tech_power.h
 $O/simple_processor.o: simple_processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
-	processor.h \
-	topoconfig.h
+	processor.h
 $O/simple_router.o: simple_router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	router.h \
-	tech_power.h \
-	topoconfig.h
+	tech_power.h
 

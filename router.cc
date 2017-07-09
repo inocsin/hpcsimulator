@@ -507,23 +507,17 @@ double Router::getRouterPower() {
 void Router::finish()
 {
     // This function is called by OMNeT++ at the end of the simulation.
-    //EV << "Sent:     " << numSent << endl;
-    //EV << "Received: " << numReceived << endl;
-    //EV << "Hop count, min:    " << hopCountStats.getMin() << endl;
-    //EV << "Hop count, max:    " << hopCountStats.getMax() << endl;
-    //EV << "Hop count, mean:   " << hopCountStats.getMean() << endl;
-    //EV << "Hop count, stddev: " << hopCountStats.getStddev() << endl;
 
     double routerPower = getRouterPower();
     EV <<"Router power: " << routerPower <<endl;
     recordScalar("routerPower", routerPower);
     if(getIndex() == 0) {
         t_totalTime = clock() - t_totalTime;
-        recordScalar("realTotalTime", (long) t_totalTime); // 单位是ms
+        recordScalar("realTotalTime", t_totalTime * 1.0 / CLOCKS_PER_SEC); // 单位是s
     }
-    recordScalar("realTotalHandleMessageTime", (long) t_handleMessage);
-    recordScalar("realRouterTime", (long) t_router);
-    recordScalar("realMaxHandleMessagetime", (long) t_max_h);
-    recordScalar("realMaxRouterTime", (long) t_max_r);
+    recordScalar("realTotalHandleMessageTime", t_handleMessage * 1.0 / CLOCKS_PER_SEC);
+    recordScalar("realRouterTime", t_router * 1.0 / CLOCKS_PER_SEC);
+    recordScalar("realMaxHandleMessagetime", t_max_h * 1.0 / CLOCKS_PER_SEC);
+    recordScalar("realMaxRouterTime", t_max_r * 1.0 / CLOCKS_PER_SEC);
 }
 
