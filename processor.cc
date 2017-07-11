@@ -166,7 +166,7 @@ void Processor::handleMessage(cMessage *msg)
                     scheduleAt(simTime()+unitime,selfMsgGenMsg);
 #endif
 
-                }else{
+                }else{ //dropFlag == true
                     scheduleAt(simTime() + CLK_CYCLE * FlitLength, selfMsgGenMsg);
                     dropFlag = false;
                 }
