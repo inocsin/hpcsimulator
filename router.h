@@ -68,7 +68,7 @@ using namespace omnetpp;
 // 对Router进行建模
 class Router : public cSimpleModule
 {
-  private:
+  protected:
     cMessage* selfMsgAlloc; //message仲裁定时信号
 
     //每个Port的buffer状态
