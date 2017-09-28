@@ -32,6 +32,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/ft_processor.o \
     $O/ft_router.o \
+    $O/high_radix_router.o \
     $O/processor.o \
     $O/router.o \
     $O/simple_processor.o \
@@ -144,12 +145,25 @@ $O/ft_processor.o: ft_processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	fat_tree.h \
+	fat_tree_topo.h \
 	processor.h \
+	router.h \
+	tech_power.h \
 	topoconfig.h
 $O/ft_router.o: ft_router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
 	fat_tree.h \
+	fat_tree_topo.h \
+	router.h \
+	tech_power.h \
+	topoconfig.h
+$O/high_radix_router.o: high_radix_router.cc \
+	buffer_info_m.h \
+	data_pkt_m.h \
+	fat_tree.h \
+	fat_tree_topo.h \
+	high_radix_router.h \
 	router.h \
 	tech_power.h \
 	topoconfig.h

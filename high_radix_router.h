@@ -8,13 +8,13 @@
 #ifndef HIGH_RADIX_ROUTER_H_
 #define HIGH_RADIX_ROUTER_H_
 
-#include "router.h"
+#include "fat_tree.h"
 
 using namespace omnetpp;
 
-class HighRadixRouter : public Router
+class HighRadixRouter : public FtRouter
 {
-  private:
+  protected:
 //    cMessage* selfMsgAlloc; //message仲裁定时信号
 //
 //    //每个Port的buffer状态
@@ -50,33 +50,40 @@ class HighRadixRouter : public Router
 //    //time
 //    clock_t t_start_h, t_end_h, t_max_h, t_start_r, t_end_r, t_max_r, t_handleMessage, t_router, t_totalTime;
 
-    DataPkt* CrosspointBuffer[PortNum][PortNum][VC]
+    DataPkt* CrosspointBuffer[PortNum][PortNum][VC][CrossPointBufferDepth];
 
 
   public:
-    HighRadixRouter();
-    virtual ~HighRadixRouter();
+//    HighRadixRouter();
+//    virtual ~HighRadixRouter();
   protected:
-    virtual void forwardMessage(DataPkt *msg, int out_port_id);
-    virtual void forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id);
+    //handle message functions, different in routers
     virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
-    virtual int getPortAndVCID(DataPkt* msg);
-    virtual int getNextRouterAvailVCID(int port_num); //计算下一个节点相应端口可用的virtual channel
-    virtual simtime_t channelAvailTime(int port_num);
-    virtual double getRouterPower();//计算路由器功耗
-    // The finish() function is called by OMNeT++ at the end of the simulation:
-    virtual void finish() override; //需要对router buffer中的pkt析构
+//    virtual void handleMessage(cMessage *msg) override; // main handle message
+    virtual void handleAllocMessage(cMessage *msg) override;  // RC, VCA, SA, ST in this function
+//    virtual void handleBufferInfoMessage(cMessage *msg); // credit-based flow control
+//    virtual void handleInputDataPkt(cMessage *msg); // input stage
+
+    //utility functions
+//    virtual void forwardMessage(DataPkt *msg, int out_port_id);
+//    virtual void forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id);
+//    virtual int getPortAndVCID(DataPkt* msg);
+//    virtual simtime_t channelAvailTime(int port_num);
+//    virtual double getRouterPower();//计算路由器功耗
+//    // The finish() function is called by OMNeT++ at the end of the simulation:
+//    virtual void finish() override; //需要对router buffer中的pkt析构
 
     //纯虚函数，根据具体的拓扑来实现
-    virtual int ppid2plid(int ppid) = 0;
-    virtual int plid2ppid(int plid) = 0;
-    virtual int swpid2swlid(int swpid) = 0;
-    virtual int swlid2swpid(int swlid) = 0;
-    virtual int calRoutePort(DataPkt* msg) = 0;
-    virtual int getNextRouterPort(int current_out_port) = 0; //计算下一个相连的router的端口
-    virtual bool connectToProcessor(int port_num) = 0;
+//    virtual int ppid2plid(int ppid) = 0;
+//    virtual int plid2ppid(int plid) = 0;
+//    virtual int swpid2swlid(int swpid) = 0;
+//    virtual int swlid2swpid(int swlid) = 0;
+//    virtual int calRoutePort(DataPkt* msg) = 0;
+//    virtual int getNextRouterPort(int current_out_port) = 0; //计算下一个相连的router的端口
+//    virtual bool connectToProcessor(int port_num) = 0;
 
 };
+
+Define_Module(HighRadixRouter);
 
 #endif /* HIGH_RADIX_ROUTER_H_ */

@@ -109,12 +109,17 @@ class Router : public cSimpleModule
     Router();
     virtual ~Router();
   protected:
+    //handle message functions, different in routers
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override; // main handle message
+    virtual void handleAllocMessage(cMessage *msg);  // RC, VCA, SA, ST in this function
+    virtual void handleBufferInfoMessage(cMessage *msg); // credit-based flow control
+    virtual void handleInputDataPkt(cMessage *msg); // input stage
+
+    //utility functions
     virtual void forwardMessage(DataPkt *msg, int out_port_id);
     virtual void forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id);
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
     virtual int getPortAndVCID(DataPkt* msg);
-    virtual int getNextRouterAvailVCID(int port_num); //计算下一个节点相应端口可用的virtual channel
     virtual simtime_t channelAvailTime(int port_num);
     virtual double getRouterPower();//计算路由器功耗
     // The finish() function is called by OMNeT++ at the end of the simulation:

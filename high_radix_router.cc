@@ -5,6 +5,15 @@
  *      Author: Vincent
  */
 
+#include "high_radix_router.h"
 
+void HighRadixRouter::initialize()
+{
+    FtRouter::initialize();
 
+}
 
+void HighRadixRouter::handleAllocMessage(cMessage *msg)
+{
+
+}
