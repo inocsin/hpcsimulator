@@ -1,5 +1,5 @@
-#ifndef FAT_TREE_H_
-#define FAT_TREE_H_
+#ifndef FT_ROUTER_H_
+#define FT_ROUTER_H_
 
 #include "router.h"
 #include "fat_tree_topo.h"
@@ -19,4 +19,4 @@ protected:
 
 Define_Module(FtRouter);
 
-#endif /* FAT_TREE_H_ */
+#endif /* FT_ROUTER_H_ */

@@ -106,20 +106,8 @@ void Router::handleAllocMessage(cMessage *msg)
 
     //Step 2. Routing Logic
     //计算每个packet的输出端口及输出vcid
-    for(int i = 0; i < PortNum; i++) {
-        for(int j = 0; j < VC; j++) {
-            DataPkt* current_pkt = InputBuffer[i][j][0];
-            //InputBuffer队头的Pkt还没有经过Routing Computing，-1代表还没RC过
-            if(current_pkt != nullptr && current_pkt->getIsHead() == true && RCInputVCState[i][j] == -1) { //数据包有可能阻塞在队头
-                RCInputVCState[i][j] = getPortAndVCID(current_pkt);
-                if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                    EV<<"Step 2. Routing Computation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<i<<
-                            ", INPORT VCID: "<<j<<", Routing Result: OUTPORT: "<<RCInputVCState[i][j]/VC<<
-                            ", OUTPUT VCID: "<<RCInputVCState[i][j]%VC<<", Msg: { "<<InputBuffer[i][j][0]<<" }\n";
-                }
-            }
-        }
-    }
+    step2RoutingLogic();
+
 
     //开始对部分模块进行计时
     t_start_r = clock();
@@ -350,6 +338,24 @@ void Router::handleAllocMessage(cMessage *msg)
         }
     }
 
+}
+
+void Router::step2RoutingLogic()
+{
+    for(int i = 0; i < PortNum; i++) {
+        for(int j = 0; j < VC; j++) {
+            DataPkt* current_pkt = InputBuffer[i][j][0];
+            //InputBuffer队头的Pkt还没有经过Routing Computing，-1代表还没RC过
+            if(current_pkt != nullptr && current_pkt->getIsHead() == true && RCInputVCState[i][j] == -1) { //数据包有可能阻塞在队头
+                RCInputVCState[i][j] = getPortAndVCID(current_pkt);
+                if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                    EV<<"Step 2. Routing Computation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<i<<
+                            ", INPORT VCID: "<<j<<", Routing Result: OUTPORT: "<<RCInputVCState[i][j]/VC<<
+                            ", OUTPUT VCID: "<<RCInputVCState[i][j]%VC<<", Msg: { "<<InputBuffer[i][j][0]<<" }\n";
+                }
+            }
+        }
+    }
 }
 
 void Router::handleBufferInfoMessage(cMessage *msg)

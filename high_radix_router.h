@@ -8,7 +8,7 @@
 #ifndef HIGH_RADIX_ROUTER_H_
 #define HIGH_RADIX_ROUTER_H_
 
-#include "fat_tree.h"
+#include "ft_router.h"
 
 using namespace omnetpp;
 
@@ -51,6 +51,7 @@ class HighRadixRouter : public FtRouter
 //    clock_t t_start_h, t_end_h, t_max_h, t_start_r, t_end_r, t_max_r, t_handleMessage, t_router, t_totalTime;
 
     DataPkt* CrosspointBuffer[PortNum][PortNum][VC][CrossPointBufferDepth];
+    int CrosspointBufferCredit[PortNum][PortNum][VC]; // credit-based flow control
 
 
   public:

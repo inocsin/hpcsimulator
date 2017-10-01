@@ -115,6 +115,8 @@ class Router : public cSimpleModule
     virtual void handleAllocMessage(cMessage *msg);  // RC, VCA, SA, ST in this function
     virtual void handleBufferInfoMessage(cMessage *msg); // credit-based flow control
     virtual void handleInputDataPkt(cMessage *msg); // input stage
+    //detail allocation functions
+    virtual void step2RoutingLogic(); // Step 2, routing logic
 
     //utility functions
     virtual void forwardMessage(DataPkt *msg, int out_port_id);
