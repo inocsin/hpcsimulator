@@ -6,7 +6,7 @@
  */
 
 #include "processor.h"
-#include "fat_tree.h"
+#include "fat_tree_topo.h"
 
 class FtProcessor : public Processor {
 protected:
