@@ -1,9 +1,9 @@
 #ifndef TOPOCONFIG_H_TEMPLATE_
 #define TOPOCONFIG_H_TEMPLATE_
 //***********topology parameters***********
-#define PortNum 16
-#define ProcessorNum 1024
-#define LinkNum 6144
+#define PortNum 4
+#define ProcessorNum 16
+#define LinkNum 96
 #define PacketSize 128
 #define FlitSize 4
 #define FlitLength 32
@@ -21,7 +21,7 @@
 //*************injection mode***************
 #define UNIFORM
 #define LAMBDA 7
-#define INJECTION_RATE 0.1
+#define INJECTION_RATE 1.0
 //*************debug infomation***************
 #define Verbose 1
 #define VERBOSE_DEBUG_MESSAGES 1
