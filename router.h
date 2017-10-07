@@ -117,6 +117,10 @@ class Router : public cSimpleModule
     virtual void handleInputDataPkt(cMessage *msg); // input stage
     //detail allocation functions
     virtual void step2RoutingLogic(); // Step 2, routing logic
+    virtual void step3VCAllocation(); // Step 3, VCAllocation
+    virtual void step6ForwardDataMsg();
+    virtual void step7ForwardBufferInfoMsg();
+
 
     //utility functions
     virtual void forwardMessage(DataPkt *msg, int out_port_id);

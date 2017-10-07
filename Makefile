@@ -144,6 +144,7 @@ $O/data_pkt_m.o: data_pkt_m.cc \
 $O/ft_processor.o: ft_processor.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
+	fat_tree_topo.h \
 	processor.h \
 	topoconfig.h
 $O/ft_router.o: ft_router.cc \
