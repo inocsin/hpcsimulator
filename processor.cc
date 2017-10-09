@@ -73,10 +73,22 @@ void Processor::handleMessage(cMessage *msg)
             if(!txQueue.isEmpty()){ //发送队列有数据
                 DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
                 int vcid = current_forward_msg->getVc_id();
+
+                //debug
+                if (getIndex() == 1 && simTime().dbl() > RecordStartTime) {
+
+                    double rec = RecordStartTime;
+                    double sim = simTime().dbl();
+                    double avil = channelAvailTime().dbl();
+                    int a = 0;
+
+                }
+
                 if(channelAvailTime() <= simTime() && BufferConnectCredit[vcid] != 0) { //发送端口空闲，下一个节点有buffer接受此flit
                     txQueue.pop();
                     forwardMessage(current_forward_msg);
                     BufferConnectCredit[vcid]--; //decrement credit count
+
                     if (simTime().dbl() > RecordStartTime) {
                         numFlitSent++;
                     }
@@ -206,6 +218,15 @@ void Processor::handleMessage(cMessage *msg)
         }else{
         //***********************收到DataPkt消息***********************
             DataPkt* datapkt = check_and_cast<DataPkt*>(msg);
+
+            if (getIndex() == 0 && simTime().dbl() > RecordStartTime) {
+                int index = getIndex();
+                double rec = RecordStartTime;
+                double sim = simTime().dbl();
+        //        double avil = channelAvailTime().dbl();
+                int a = 0;
+
+            }
 
             // Message arrived
             // 由于链路分配的单位是flit而非packet，所以会出现不同虚通道的body flit接连到达

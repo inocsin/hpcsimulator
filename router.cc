@@ -218,8 +218,6 @@ void Router::handleAllocMessage(cMessage *msg)
             if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
                 EV << "In Router: " << getIndex() << "(" << swpid2swlid(getIndex()) << "), VCA Input: Inport: "
                         << inport << ", vcid: " << inport_vcid << ", is released" << endl;
-            }
-            if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
                 EV << "In Router: " << getIndex() << "(" << swpid2swlid(getIndex()) << "), VCA Output: Output: "
                         << i << ", vcid: " << output_vcid << ", is released" << endl;
             }
@@ -426,9 +424,10 @@ void Router::forwardMessage(DataPkt *msg, int out_port_id)
     send(msg,str1);
     int cur_swpid=getIndex();//当前路由器的id
     int cur_swlid=swpid2swlid(cur_swpid);
-    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+    if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
         EV << "Forwarding message { " << msg << " } from router "<<cur_swpid<<"("<<cur_swlid<<")"<< " through port "<<k<<"\n";
     }
+
 
 }
 
@@ -446,7 +445,7 @@ void Router::forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id){
     int cur_swpid=getIndex();//当前路由器的id
     int cur_swlid=swpid2swlid(cur_swpid);
     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-        EV << "Forwarding BufferInfoMsg { " << msg << " } from router "<<cur_swpid<<"("<<cur_swlid<<")"<< " through port "<<k<<"\n";
+        EV << "Step 7 Forwarding BufferInfoMsg { " << msg << " } from router "<<cur_swpid<<"("<<cur_swlid<<")"<< " through port "<<k<<"\n";
     }
 
 }

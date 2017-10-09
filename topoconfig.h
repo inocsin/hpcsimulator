@@ -12,7 +12,7 @@
 #define ProcessorBufferDepth 4 * FlitLength
 #define CrossPointBufferDepth 8
 #define FREQ 3500000000.0
-#define OutBufferDepth 351
+#define OutBufferDepth 2
 #define RecordStartTime 1.0000006
 //*************unchangable variable***************
 #define CLK_CYCLE 1/FREQ
