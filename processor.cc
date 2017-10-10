@@ -12,6 +12,7 @@
  */
 
 #include "processor.h"
+#include <assert.h>
 
 Processor::Processor(){
     selfMsgGenMsg=nullptr;
@@ -188,7 +189,7 @@ void Processor::handleMessage(cMessage *msg)
         }
 
 
-    }else{
+    }else{ // end of self msg
         //************************非self message*********************
         //************************收到buffer更新消息******************
         if(strcmp("bufferInfoMsg", msg->getName()) == 0){
@@ -218,6 +219,16 @@ void Processor::handleMessage(cMessage *msg)
         }else{
         //***********************收到DataPkt消息***********************
             DataPkt* datapkt = check_and_cast<DataPkt*>(msg);
+            if(datapkt->getIsHead()) {
+                int dest_id = datapkt->getDst_ppid();
+                int index = getIndex();
+                if(dest_id != index) {
+                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                        EV << ">>>>>>>>>>Message {" << datapkt << " } arrived at wrong destination at node " <<index<<"("<<ppid2plid(index)<<")<<<<<<<<<<\n";
+                        assert(dest_id == index);
+                    }
+                }
+            }
 
 
 
