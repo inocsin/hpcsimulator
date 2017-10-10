@@ -17,14 +17,13 @@ void HighRadixRouter::initialize()
             for(int k = 0; k < VC; k++) {
                 CrosspointBufferCredit[i][j][k] = CrossPointBufferDepth;
                 RCCrossPointVCState[i][j][k] = -1;
+                VACrossPointVCState[i][j][k] = false;
                 for(int l = 0; l < CrossPointBufferDepth; l++) {
                     CrosspointBuffer[i][j][k][l] = nullptr;
                 }
             }
         }
     }
-
-
 }
 
 void HighRadixRouter::handleAllocMessage(cMessage *msg)
@@ -81,6 +80,7 @@ void HighRadixRouter::handleAllocMessage(cMessage *msg)
 void HighRadixRouter::step3VCAllocation()
 {
     // Step 3.1 output vc computation
+    // 计算crosspont中vc的输出outport vc，但不代表占有该vc
     for(int i = 0; i < PortNum; i++) { // input port
         for(int j = 0; j < PortNum; j++) { // output port
             for(int k = 0; k < VC; k++) { // vc
@@ -118,6 +118,7 @@ void HighRadixRouter::step3VCAllocation()
                 if(RCCrossPointVCState[inport][outport][in_vc] == out_vc) { //上面已经保证仲裁的输出端口为outport
                     VAOutputVCStatePre[i][j] = inport * VC + in_vc;
                     VAOutputVCState[i][j] = inport * VC + in_vc;
+                    VACrossPointVCState[inport][outport][in_vc] = true;
                     flag = true;
                     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
                         EV<<"Step 3.2 VC Allocation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), WIN INPORT: "<<inport<<
@@ -185,10 +186,17 @@ void HighRadixRouter::step4_5_SA_ST()
             int port_vcid = j + port_vcid_start;
             int inport = (port_vcid / VC) % PortNum;
             int in_vc = port_vcid % VC;
+            //
             if(CrosspointBuffer[inport][i][in_vc][0] != nullptr &&
-               RCCrossPointVCState[inport][i][in_vc] != -1) {
+               VACrossPointVCState[inport][i][in_vc] == true) { //该crosspoint的vc占有outport vc
+                //RCCrossPointVCState[inport][i][in_vc] != -1不代表该input vc占有output vc
+                assert(RCCrossPointVCState[inport][i][in_vc] != -1);
                 // this out_vc is allocated due to RCInputVCState != -1
                 int out_vc = RCCrossPointVCState[inport][i][in_vc];
+                if(VAOutputVCState[outport][out_vc] != inport * VC + in_vc) {
+                    int a = 0;
+                    int b = 0;
+                }
                 assert(VAOutputVCState[outport][out_vc] == inport * VC + in_vc);
                 if(OutputBuffer[i][out_vc][OutBufferDepth-1] == nullptr) { // buffer available
                     DataPkt* current_pkt = CrosspointBuffer[inport][outport][in_vc][0];
@@ -205,6 +213,7 @@ void HighRadixRouter::step4_5_SA_ST()
                     if(current_pkt->getIsTail()) {
                         RCCrossPointVCState[inport][outport][in_vc] = -1;
                         VAOutputVCState[outport][out_vc] = -1;
+                        VACrossPointVCState[inport][outport][in_vc] = false;
                     }
                     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
                         EV<<"Step 4.2 Switch Allocation, Output Port Stage >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), OUTPORT: "<<i<<

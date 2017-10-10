@@ -219,6 +219,8 @@ void Processor::handleMessage(cMessage *msg)
         //***********************收到DataPkt消息***********************
             DataPkt* datapkt = check_and_cast<DataPkt*>(msg);
 
+
+
             if (getIndex() == 0 && simTime().dbl() > RecordStartTime) {
                 int index = getIndex();
                 double rec = RecordStartTime;

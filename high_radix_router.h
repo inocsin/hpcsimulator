@@ -22,6 +22,11 @@ using namespace omnetpp;
  * high-radix-router allocation register并不会用到所有的寄存器，使用到的寄存器如下:
  * RCInputVCState, VAOutputVCState, VAOutputVCStatePre, RCCrossPointVCState
  *
+ * RCCrossPointVCState代表在VCA阶段，计算出来的output vc，但不代表占有该output vc，可能多个inport vc里的pkt都被分配到了
+ * 同一个输出outport vc。
+ * VACrossPointVCState代表crosspoint中vc在vca仲裁的结果，true表示该vc成功获得output vc
+ *
+ *
  *
  */
 
@@ -33,7 +38,8 @@ class HighRadixRouter : public FtRouter
     int CrosspointBufferCredit[PortNum][PortNum][VC]; // credit-based flow control
 
     // allocation
-    int RCCrossPointVCState[PortNum][PortNum][VC]; // CrossPoint中buffer头的vc allocation结果,值为[0,VC-1]
+    int RCCrossPointVCState[PortNum][PortNum][VC]; // CrossPoint中buffer头的vc allocation结果,即分配output vc结果，值为[0,VC-1]
+    bool VACrossPointVCState[PortNum][PortNum][VC]; // true代表该vc仲裁胜利
 //    int VACrossPointOutputVCState[PortNum][VC];
 //    bool VAInputVCState[PortNum][VC];
 

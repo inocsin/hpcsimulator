@@ -1,4 +1,4 @@
-simple HighRadixRouter
+simple FtRouter
 {
 	parameters:
 
@@ -24,7 +24,7 @@ network Fat_tree
 			datarate = 112Gbps;
 		}
 	submodules:
-		router[20]: HighRadixRouter {
+		router[20]: FtRouter {
 
 		}
 		processor[16]: FtProcessor{
