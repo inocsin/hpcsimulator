@@ -114,7 +114,82 @@ void Router::handleAllocMessage(cMessage *msg)
     //Step 3. Virtual Channel Allocation
     step3VCAllocation();
 
+    // Step 4. Switch Arbitration && Step 5. Switch Traversal
+    step4_5_SA_ST();
 
+
+    //结束部分模块的计时
+    t_end_r = clock();
+    if (simTime().dbl() > RecordStartTime) {
+        if(t_end_r - t_start_r > t_max_r) {
+            t_max_r = t_end_r - t_start_r;
+        }
+        t_router += t_end_r - t_start_r;
+    }
+
+
+    //Step 6. Forward Data Message & Shift OutputBuffer
+    step6ForwardDataMsg();
+
+    //Step 7. Forward bufferInfoMsg Message
+    step7ForwardBufferInfoMsg();
+
+
+}
+
+void Router::step2RoutingLogic()
+{
+    for(int i = 0; i < PortNum; i++) {
+        for(int j = 0; j < VC; j++) {
+            DataPkt* current_pkt = InputBuffer[i][j][0];
+            //InputBuffer队头的Pkt还没有经过Routing Computing，-1代表还没RC过
+            if(current_pkt != nullptr && current_pkt->getIsHead() == true && RCInputVCState[i][j] == -1) { //数据包有可能阻塞在队头
+                RCInputVCState[i][j] = getPortAndVCID(current_pkt);
+                if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                    EV<<"Step 2. Routing Computation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<i<<
+                            ", INPORT VCID: "<<j<<", Routing Result: OUTPORT: "<<RCInputVCState[i][j]/VC<<
+                            ", OUTPUT VCID: "<<RCInputVCState[i][j]%VC<<", Msg: { "<<InputBuffer[i][j][0]<<" }\n";
+                }
+            }
+        }
+    }
+}
+
+void Router::step3VCAllocation()
+{
+    //每一个输出端口的每一个virtual channel要对每个输入端口的每个virtual channel进行仲裁，只有一个胜利
+    //外循环，对每个output virtual channel进行循环
+    for(int i = 0; i < PortNum; i++) {
+        for(int j = 0; j < VC; j++) {
+            //内循环，对每个input virtual channel进行判断
+            //注意：加了OutputBuffer后，tail flit数据送到outputBuffer后一定要释放VAOutputVCState，输出虚通道状态寄存器要释放
+            if(VAOutputVCState[i][j] >= 0) continue; //若输出端口vc已被分配，则跳过下面循环
+            bool flag = false;
+            int port_vc = VAOutputVCStatePre[i][j] + 1;
+            int count = 0, total = PortNum * VC;
+            for(; count < total && flag == false; count++, port_vc++) {
+                int m = (port_vc / VC) % PortNum;
+                int n = port_vc % VC;
+                if(RCInputVCState[m][n] == i * VC + j) {//该输入虚通道里面的数据一定是head flit, 否则上面if语句会跳过
+                    if(VAInputVCState[m][n] == true) {
+                        EV << "Error: Step 3. VC Allocation >> ROUTER: " << getIndex()<<"("<<swpid2swlid(getIndex()) << "), VAInputVCState != false" << endl;
+                    }
+                    VAInputVCState[m][n] = true; //该虚通道仲裁胜利
+                    VAOutputVCStatePre[i][j] = m * VC + n;
+                    VAOutputVCState[i][j] = m * VC + n;
+                    flag = true;
+                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                        EV<<"Step 3. VC Allocation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), WIN INPORT: "<<m<<
+                                ", WIN INPORT VCID: "<<n<<", OUTPORT: "<<i<<
+                                ", OUTPORT VCID: "<<j<<", Win Msg: { "<<InputBuffer[m][n][0]<<" }\n";
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Router::step4_5_SA_ST() {
     //Step 4. Switch Arbitration
     //在VAInputVCState中为true的输入vc中做选择，而且其对应的输出端口的vc的buffer必须为空，能够容纳它
     //4.1. 输入端口仲裁
@@ -230,77 +305,8 @@ void Router::handleAllocMessage(cMessage *msg)
         }
 
     }
-
-    //结束部分模块的计时
-    t_end_r = clock();
-    if (simTime().dbl() > RecordStartTime) {
-        if(t_end_r - t_start_r > t_max_r) {
-            t_max_r = t_end_r - t_start_r;
-        }
-        t_router += t_end_r - t_start_r;
-    }
-
-
-    //Step 6. Forward Data Message & Shift OutputBuffer
-    step6ForwardDataMsg();
-
-    //Step 7. Forward bufferInfoMsg Message
-    step7ForwardBufferInfoMsg();
-
-
 }
 
-void Router::step2RoutingLogic()
-{
-    for(int i = 0; i < PortNum; i++) {
-        for(int j = 0; j < VC; j++) {
-            DataPkt* current_pkt = InputBuffer[i][j][0];
-            //InputBuffer队头的Pkt还没有经过Routing Computing，-1代表还没RC过
-            if(current_pkt != nullptr && current_pkt->getIsHead() == true && RCInputVCState[i][j] == -1) { //数据包有可能阻塞在队头
-                RCInputVCState[i][j] = getPortAndVCID(current_pkt);
-                if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                    EV<<"Step 2. Routing Computation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<i<<
-                            ", INPORT VCID: "<<j<<", Routing Result: OUTPORT: "<<RCInputVCState[i][j]/VC<<
-                            ", OUTPUT VCID: "<<RCInputVCState[i][j]%VC<<", Msg: { "<<InputBuffer[i][j][0]<<" }\n";
-                }
-            }
-        }
-    }
-}
-
-void Router::step3VCAllocation()
-{
-    //每一个输出端口的每一个virtual channel要对每个输入端口的每个virtual channel进行仲裁，只有一个胜利
-    //外循环，对每个output virtual channel进行循环
-    for(int i = 0; i < PortNum; i++) {
-        for(int j = 0; j < VC; j++) {
-            //内循环，对每个input virtual channel进行判断
-            //注意：加了OutputBuffer后，tail flit数据送到outputBuffer后一定要释放VAOutputVCState，输出虚通道状态寄存器要释放
-            if(VAOutputVCState[i][j] >= 0) continue; //若输出端口vc已被分配，则跳过下面循环
-            bool flag = false;
-            int port_vc = VAOutputVCStatePre[i][j] + 1;
-            int count = 0, total = PortNum * VC;
-            for(; count < total && flag == false; count++, port_vc++) {
-                int m = (port_vc / VC) % PortNum;
-                int n = port_vc % VC;
-                if(RCInputVCState[m][n] == i * VC + j) {//该输入虚通道里面的数据一定是head flit, 否则上面if语句会跳过
-                    if(VAInputVCState[m][n] == true) {
-                        EV << "Error: Step 3. VC Allocation >> ROUTER: " << getIndex()<<"("<<swpid2swlid(getIndex()) << "), VAInputVCState != false" << endl;
-                    }
-                    VAInputVCState[m][n] = true; //该虚通道仲裁胜利
-                    VAOutputVCStatePre[i][j] = m * VC + n;
-                    VAOutputVCState[i][j] = m * VC + n;
-                    flag = true;
-                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                        EV<<"Step 3. VC Allocation >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), WIN INPORT: "<<m<<
-                                ", WIN INPORT VCID: "<<n<<", OUTPORT: "<<i<<
-                                ", OUTPORT VCID: "<<j<<", Win Msg: { "<<InputBuffer[m][n][0]<<" }\n";
-                    }
-                }
-            }
-        }
-    }
-}
 
 void Router::step6ForwardDataMsg()
 {

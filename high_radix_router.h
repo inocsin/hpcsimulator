@@ -42,6 +42,7 @@ class HighRadixRouter : public FtRouter
     virtual void initialize() override;
     virtual void handleAllocMessage(cMessage *msg) override;  // RC, VCA, SA, ST in this function
     virtual void step3VCAllocation() override;
+    virtual void step4_5_SA_ST() override;  // Step 4,5 SA, ST
 
 
 };

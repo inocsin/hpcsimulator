@@ -75,7 +75,7 @@ void Processor::handleMessage(cMessage *msg)
                 int vcid = current_forward_msg->getVc_id();
 
                 //debug
-                if (getIndex() == 1 && simTime().dbl() > RecordStartTime) {
+                if (getIndex() == 3 && simTime().dbl() > 1.000000014585) {
 
                     double rec = RecordStartTime;
                     double sim = simTime().dbl();

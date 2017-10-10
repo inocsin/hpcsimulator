@@ -118,6 +118,7 @@ class Router : public cSimpleModule
     //detail allocation functions
     virtual void step2RoutingLogic(); // Step 2, routing logic
     virtual void step3VCAllocation(); // Step 3, VCAllocation
+    virtual void step4_5_SA_ST();  // Step 4,5 SA, ST
     virtual void step6ForwardDataMsg();
     virtual void step7ForwardBufferInfoMsg();
 
