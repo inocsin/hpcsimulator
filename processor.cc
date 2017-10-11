@@ -231,16 +231,6 @@ void Processor::handleMessage(cMessage *msg)
             }
 
 
-
-            if (getIndex() == 0 && simTime().dbl() > RecordStartTime) {
-                int index = getIndex();
-                double rec = RecordStartTime;
-                double sim = simTime().dbl();
-        //        double avil = channelAvailTime().dbl();
-                int a = 0;
-
-            }
-
             // Message arrived
             // 由于链路分配的单位是flit而非packet，所以会出现不同虚通道的body flit接连到达
             int current_ppid = getIndex();

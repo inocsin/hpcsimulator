@@ -346,13 +346,6 @@ void Router::step6ForwardDataMsg()
         for(int j = 0; j < VC; j++) {
             for(int k = 0; k < OutBufferDepth; k++) {
                 if(OutputBuffer[i][j][k] != nullptr && k > 0 && OutputBuffer[i][j][k-1] == nullptr) {
-//                    if (k == OutBufferDepth - 1 && OutputBuffer[i][j][k]->getIsTail() == true) {
-//                        VAOutputVCState[i][j] = -1;
-//                        if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-//                            EV << "In Router: " << getIndex() << "(" << swpid2swlid(getIndex()) << "), VCA Output: Output: "
-//                                    << i << ", vcid: " << j << ", is released" << endl;
-//                        }
-//                    }
                     OutputBuffer[i][j][k-1] = OutputBuffer[i][j][k];
                     OutputBuffer[i][j][k] = nullptr;
                 }

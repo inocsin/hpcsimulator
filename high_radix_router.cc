@@ -28,16 +28,6 @@ void HighRadixRouter::initialize()
 
 void HighRadixRouter::handleAllocMessage(cMessage *msg)
 {
-    //debug
-    if (getIndex() == 7 && simTime().dbl() > 1.000000014871) {
-        int index = getIndex();
-        double rec = RecordStartTime;
-        double sim = simTime().dbl();
-//        double avil = channelAvailTime().dbl();
-        int a = 0;
-
-    }
-
     //High radix router
     //Kim J, Dally W J, Towles B, et al. Microarchitecture of a high radix router[C]
     //Computer Architecture, 2005. ISCA'05. Proceedings. 32nd International Symposium on. IEEE, 2005: 420-431.
