@@ -44,6 +44,9 @@ void HighRadixRouter::handleAllocMessage(cMessage *msg)
 
     scheduleAt(simTime()+CLK_CYCLE, selfMsgAlloc);
 
+    // calculate adjacent routers' input buffer occupancy
+    calcInputBufferOccupancy();
+
     //Step 2. Routing Logic
     //计算每个packet的输出端口及输出vcid
     step2RoutingLogic();

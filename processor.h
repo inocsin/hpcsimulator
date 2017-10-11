@@ -44,6 +44,7 @@ class Processor : public cSimpleModule
     long flitByHop; //用于计算链路利用率, flit * Hop
     bool dropFlag; //判断本轮是否drop过
 
+
     int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
     cQueue txQueue; //发送数据队列
 

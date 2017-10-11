@@ -56,6 +56,7 @@ void Router::initialize()
     t_handleMessage = 0;
     t_router = 0;
     t_totalTime = clock();
+    inputBufferOccupancy = 0.0;
 
 }
 
@@ -103,6 +104,9 @@ void Router::handleMessage(cMessage *msg)
 void Router::handleAllocMessage(cMessage *msg)
 {
     scheduleAt(simTime()+CLK_CYCLE, selfMsgAlloc);
+
+    // calculate adjacent routers' input buffer occupancy
+    calcInputBufferOccupancy();
 
     //Step 2. Routing Logic
     //计算每个packet的输出端口及输出vcid
@@ -535,6 +539,19 @@ double Router::getRouterPower() {
 
 }
 
+void Router::calcInputBufferOccupancy()
+{
+    if(simTime().dbl() > RecordStartTime) {
+        for(int i = 0; i < PortNum; i++) {
+            for(int j = 0; j < VC; j++) {
+                inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i][j];
+            }
+        }
+    }
+
+
+}
+
 void Router::finish()
 {
     // This function is called by OMNeT++ at the end of the simulation.
@@ -550,5 +567,13 @@ void Router::finish()
     recordScalar("realRouterTime", t_router * 1.0 / CLOCKS_PER_SEC);
     recordScalar("realMaxHandleMessagetime", t_max_h * 1.0 / CLOCKS_PER_SEC);
     recordScalar("realMaxRouterTime", t_max_r * 1.0 / CLOCKS_PER_SEC);
+
+
+    double timeCount = (simTime().dbl() - RecordStartTime) / (CLK_CYCLE);
+    double totalInputBufferOccupancy = 1.0 * PortNum * VC * BufferDepth * timeCount;
+    inputBufferOccupancy = inputBufferOccupancy / totalInputBufferOccupancy;
+    recordScalar("inputBufferOccupancy", inputBufferOccupancy);
+//    recordScalar("totalInputBufferOccupancy", totalInputBufferOccupancy);
+
 }
 
