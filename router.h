@@ -124,7 +124,7 @@ class Router : public cSimpleModule
 
 
     //utility functions
-    virtual void calcInputBufferOccupancy();
+    virtual void calcInputBufferOccupancy(); //计算相邻input buffer的占用率
     virtual void forwardMessage(DataPkt *msg, int out_port_id);
     virtual void forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id);
     virtual int getPortAndVCID(DataPkt* msg);

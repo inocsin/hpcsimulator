@@ -4,15 +4,15 @@
 #define PortNum 4
 #define ProcessorNum 16
 #define LinkNum 96
-#define PacketSize 128
+#define PacketSize 16
 #define FlitSize 4
-#define FlitLength 32
+#define FlitLength 4
 #define VC 3
 #define BufferDepth 4 * FlitLength
 #define ProcessorBufferDepth 4 * FlitLength
 #define CrossPointBufferDepth 8
 #define FREQ 3500000000.0
-#define OutBufferDepth 2
+#define OutBufferDepth 3
 #define RecordStartTime 1.0000006
 //*************unchangable variable***************
 #define CLK_CYCLE 1/FREQ

@@ -17,12 +17,14 @@
 Processor::Processor(){
     selfMsgGenMsg=nullptr;
     selfMsgSendMsg=nullptr;
+    selfMsgCalcBufferOccupy=nullptr;
 
 }
 
 Processor::~Processor(){
     cancelAndDelete(selfMsgGenMsg);
     cancelAndDelete(selfMsgSendMsg);
+    cancelAndDelete(selfMsgCalcBufferOccupy);
 
 }
 
@@ -45,6 +47,8 @@ void Processor::initialize()
     creditMsgDelayTimeTotal = 0;
     creditMsgDelayTimeCount = 0;
 
+    inputBufferOccupancy = 0.0;
+
 //    hopCountVector.setName("hopCount");
 //    flitDelayTime.setName("flitDelayTime");
 //    packageDelayTime.setName("packageDelayTime");
@@ -54,6 +58,8 @@ void Processor::initialize()
     scheduleAt(Sim_Start_Time, selfMsgSendMsg);
     selfMsgGenMsg = new cMessage("selfMsgGenMsg");
     scheduleAt(Sim_Start_Time, selfMsgGenMsg);
+    selfMsgCalcBufferOccupy = new cMessage("selfMsgCalcBufferOccupy");
+    scheduleAt(Sim_Start_Time, selfMsgCalcBufferOccupy);
 
     for (int i = 0; i < VC; i++) {
         BufferConnectCredit[i] = BufferDepth; //初始化与它相连的router的buffer都为空
@@ -68,8 +74,12 @@ void Processor::initialize()
 void Processor::handleMessage(cMessage *msg)
 {
     if (msg->isSelfMessage()) {
+        if(msg == selfMsgCalcBufferOccupy) {
+            calcInputBufferOccupancy();
+            scheduleAt(simTime()+CLK_CYCLE, selfMsgCalcBufferOccupy);
+        }
         //********************发送新数据的自定时消息********************
-        if(msg == selfMsgSendMsg) {
+        else if(msg == selfMsgSendMsg) {
             //****************************转发flit**************************
             if(!txQueue.isEmpty()){ //发送队列有数据
                 DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
@@ -379,6 +389,14 @@ simtime_t Processor::channelAvailTime(){
 
 }
 
+void Processor::calcInputBufferOccupancy()
+{
+    for(int i = 0; i < VC; i++) {
+        inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i];
+    }
+
+}
+
 //processor转发的路由算法,processor只有一个prot,直接转发出去即可
 void Processor::forwardMessage(DataPkt *msg)
 {
@@ -455,10 +473,13 @@ void Processor::finish()
     recordScalar("creditMsgDelayTimeTotal", creditMsgDelayTimeTotal);
     recordScalar("creditMsgDelayTimeCount", creditMsgDelayTimeCount);
 
+    double timeCount = (simTime().dbl() - RecordStartTime) / (CLK_CYCLE);
 
+    double totalInputBufferOccupancy = 1.0 * VC * BufferDepth * timeCount;
+    inputBufferOccupancy = inputBufferOccupancy / totalInputBufferOccupancy;
+    recordScalar("processorInputBufferOccupancy", inputBufferOccupancy);
 
     if(getIndex() == 0) {
-        double timeCount = (simTime().dbl() - RecordStartTime) / (CLK_CYCLE);
         recordScalar("timeCount", timeCount);
     }
 

@@ -536,12 +536,13 @@ void Router::calcInputBufferOccupancy()
 {
     if(simTime().dbl() > RecordStartTime) {
         for(int i = 0; i < PortNum; i++) {
-            for(int j = 0; j < VC; j++) {
-                inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i][j];
+            if(!connectToProcessor(i)) {
+                for(int j = 0; j < VC; j++) {
+                    inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i][j];
+                }
             }
         }
     }
-
 
 }
 
@@ -563,7 +564,13 @@ void Router::finish()
 
 
     double timeCount = (simTime().dbl() - RecordStartTime) / (CLK_CYCLE);
-    double totalInputBufferOccupancy = 1.0 * PortNum * VC * BufferDepth * timeCount;
+    int port_num = 0;
+    for(int i = 0; i < PortNum; i++) {
+        if(!connectToProcessor(i)) {
+            ++port_num;
+        }
+    }
+    double totalInputBufferOccupancy = 1.0 * port_num * VC * BufferDepth * timeCount;
     inputBufferOccupancy = inputBufferOccupancy / totalInputBufferOccupancy;
     recordScalar("inputBufferOccupancy", inputBufferOccupancy);
 //    recordScalar("totalInputBufferOccupancy", totalInputBufferOccupancy);
