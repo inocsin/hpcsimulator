@@ -49,6 +49,8 @@ class Processor : public cSimpleModule
     int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
     cQueue txQueue; //发送数据队列
     double inputBufferOccupancy; // input buffer占有率
+    double inputBufferEmptyTimes; // buffer空闲的时段
+    double inputBufferFullTimes;
 
 //    cOutVector hopCountVector;
 //    cOutVector flitDelayTime;

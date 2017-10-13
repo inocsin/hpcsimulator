@@ -104,6 +104,8 @@ class Router : public cSimpleModule
     clock_t t_start_h, t_end_h, t_max_h, t_start_r, t_end_r, t_max_r, t_handleMessage, t_router, t_totalTime;
 
     double inputBufferOccupancy; // input buffer占有率
+    double inputBufferEmptyTimes; // buffer空闲的时段
+    double inputBufferFullTimes;
 
   public:
     Router();

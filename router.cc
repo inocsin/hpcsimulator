@@ -56,7 +56,10 @@ void Router::initialize()
     t_handleMessage = 0;
     t_router = 0;
     t_totalTime = clock();
+
     inputBufferOccupancy = 0.0;
+    inputBufferEmptyTimes = 0.0;
+    inputBufferFullTimes = 0.0;
 
 }
 
@@ -538,6 +541,11 @@ void Router::calcInputBufferOccupancy()
             if(!connectToProcessor(i)) {
                 for(int j = 0; j < VC; j++) {
                     inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i][j];
+                    if(BufferConnectCredit[i][j] == 0) {
+                        ++inputBufferFullTimes;
+                    } else if(BufferConnectCredit[i][j] == BufferDepth) {
+                        ++inputBufferEmptyTimes;
+                    }
                 }
             }
         }
@@ -572,6 +580,8 @@ void Router::finish()
     double totalInputBufferOccupancy = 1.0 * port_num * VC * BufferDepth * timeCount;
     inputBufferOccupancy = inputBufferOccupancy / totalInputBufferOccupancy;
     recordScalar("inputBufferOccupancy", inputBufferOccupancy);
+    recordScalar("inputBufferFullTimes", inputBufferFullTimes / (timeCount * VC * port_num));
+    recordScalar("inputBufferEmptyTimes", inputBufferEmptyTimes / (timeCount * VC * port_num));
 //    recordScalar("totalInputBufferOccupancy", totalInputBufferOccupancy);
 
 }

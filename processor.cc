@@ -48,6 +48,8 @@ void Processor::initialize()
     creditMsgDelayTimeCount = 0;
 
     inputBufferOccupancy = 0.0;
+    inputBufferEmptyTimes = 0.0;
+    inputBufferFullTimes = 0.0;
 
 //    hopCountVector.setName("hopCount");
 //    flitDelayTime.setName("flitDelayTime");
@@ -408,10 +410,16 @@ simtime_t Processor::channelAvailTime(){
 
 void Processor::calcInputBufferOccupancy()
 {
-    for(int i = 0; i < VC; i++) {
-        inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i];
+    if(simTime().dbl() > RecordStartTime) {
+        for(int i = 0; i < VC; i++) {
+            inputBufferOccupancy += 1.0 * BufferDepth - BufferConnectCredit[i];
+            if(BufferConnectCredit[i] == 0) {
+                ++inputBufferFullTimes;
+            } else if(BufferConnectCredit[i] == BufferDepth) {
+                ++inputBufferEmptyTimes;
+            }
+        }
     }
-
 }
 
 //processor转发的路由算法,processor只有一个prot,直接转发出去即可
@@ -495,6 +503,8 @@ void Processor::finish()
     double totalInputBufferOccupancy = 1.0 * VC * BufferDepth * timeCount;
     inputBufferOccupancy = inputBufferOccupancy / totalInputBufferOccupancy;
     recordScalar("processorInputBufferOccupancy", inputBufferOccupancy);
+    recordScalar("processorInputBufferFullTimes", inputBufferFullTimes / (timeCount * VC));
+    recordScalar("processorInputBufferEmptyTimes", inputBufferEmptyTimes / (timeCount * VC));
 
     if(getIndex() == 0) {
         recordScalar("timeCount", timeCount);
