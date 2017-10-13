@@ -77,6 +77,10 @@ class Processor : public cSimpleModule
 
     //handle message
     virtual void handleMessage(cMessage *msg) override;
+    virtual void handleSendMsg();
+    virtual void handleGenMsg();
+    virtual void handleBufferInfoMsg(cMessage *msg);
+    virtual void handleDataPkt(cMessage *msg);
 
 
     //util function

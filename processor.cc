@@ -65,9 +65,7 @@ void Processor::initialize()
         BufferConnectCredit[i] = BufferDepth; //初始化与它相连的router的buffer都为空
     }
 
-
     dropFlag = false;
-
 
 }
 
@@ -81,180 +79,202 @@ void Processor::handleMessage(cMessage *msg)
         //********************发送新数据的自定时消息********************
         else if(msg == selfMsgSendMsg) {
             //****************************转发flit**************************
-            if(!txQueue.isEmpty()){ //发送队列有数据
-                DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
-                int vcid = current_forward_msg->getVc_id();
-
-                //debug
-                if (getIndex() == 3 && simTime().dbl() > 1.000000014585) {
-
-                    double rec = RecordStartTime;
-                    double sim = simTime().dbl();
-                    double avil = channelAvailTime().dbl();
-                    int a = 0;
-
-                }
-
-                if(channelAvailTime() <= simTime() && BufferConnectCredit[vcid] != 0) { //发送端口空闲，下一个节点有buffer接受此flit
-                    txQueue.pop();
-                    forwardMessage(current_forward_msg);
-                    BufferConnectCredit[vcid]--; //decrement credit count
-
-                    if (simTime().dbl() > RecordStartTime) {
-                        numFlitSent++;
-                    }
-                    if (current_forward_msg->getIsTail() == true) {
-                        if (simTime().dbl() > RecordStartTime) {
-                            numPackageSent++;
-                        }
-                    }
-
-                    if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
-                    }
-                }
-
-            }
-
-            scheduleAt(std::max(simTime()+CLK_CYCLE,channelAvailTime()),selfMsgSendMsg);
+            handleSendMsg();
 
         }else if(msg == selfMsgGenMsg){
 
-//            if(getIndex() == 0){ //processor产生msg的模式,需要改进
-            if (true) {
-
-                //**********************产生flit*****************************
-                if(txQueue.getLength() + FlitLength <= ProcessorBufferDepth){ //要产生新的Packet(head flit + body flit)，同时buffer又有空间来存储
-                    int bestVCID = generateBestVCID();
-                    for(int i = 0; i < FlitLength; i++) {
-                        if(i == 0) {
-                            DataPkt* msg = generateMessage(true, false, FlitLength, i, bestVCID);
-                            txQueue.insert(msg);
-                            if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                                checkGenMsg(msg);
-                            }
-                            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                                EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Head Flit>>>>>>>>>>\n";
-                                EV << msg << endl;
-                            }
-                        } else if(i == FlitLength - 1) {
-                            DataPkt* msg = generateMessage(false, true, FlitLength, i, bestVCID);
-                            txQueue.insert(msg);
-                            if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                                checkGenMsg(msg);
-                            }
-                            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                                EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Tail Flit>>>>>>>>>>\n";
-                                EV << msg << endl;
-                            }
-                        } else {
-                            DataPkt* msg = generateMessage(false, false, FlitLength, i, bestVCID);
-                            txQueue.insert(msg);
-                            if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                                checkGenMsg(msg);
-                            }
-                            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                                EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Body Flit>>>>>>>>>>\n";
-                                EV << msg << endl;
-                            }
-                        }
-
-                    }
-
-                }else{//要产生新的package，但是buffer空间不够，drop掉该package
-                    if (simTime().dbl() > RecordStartTime) {
-                        numPktDropped++;
-                    }
-                    //如果drop了一个packet的，则置为1，进入下面的定时时，
-                    //会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
-                    dropFlag = true;
-
-                }
-
-                //**********************产生定时消息*****************************
-                //package之间的时间间隔为泊松分布或均匀分布
-                if(dropFlag == false){
-
-#ifdef POISSON_DIST //泊松分布
-                    double expTime = Poisson();
-                    if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        EV << "Poisson interval: "<<expTime<<"\n";
-                    }
-                    scheduleAt(simTime()+expTime,selfMsgGenMsg);
-#else //均匀分布
-                    double unitime = Uniform();
-                    if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        EV << "Uniform interval: "<<unitime<<"\n";
-                    }
-                    scheduleAt(simTime()+unitime,selfMsgGenMsg);
-#endif
-
-                }else{ //dropFlag == true
-                    scheduleAt(simTime() + CLK_CYCLE * FlitLength, selfMsgGenMsg);
-                    dropFlag = false;
-                }
-
-            }
+            handleGenMsg();
 
         }
-
 
     }else{ // end of self msg
         //************************非self message*********************
         //************************收到buffer更新消息******************
         if(strcmp("bufferInfoMsg", msg->getName()) == 0){
 
-            BufferInfoMsg *bufferInfoMsg = check_and_cast<BufferInfoMsg*>(msg);
-            int from_port=bufferInfoMsg->getFrom_port();
-            int vcid = bufferInfoMsg->getVcid();
-            BufferConnectCredit[vcid]++; //increment credit count
-
-            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                EV<<"Receiving bufferInfoMsg >> PROCESSOR: "<<getIndex()<<"("<<ppid2plid(getIndex())<<"), INPORT: "<<from_port<<
-                    ", Received MSG: { "<<bufferInfoMsg<<" }\n";
-                EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
-            }
-
-            simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
-            if (simTime().dbl() > RecordStartTime) {
-//                creditMsgDelayTime.record(credit_msg_delay.dbl());
-                creditMsgDelayTimeTotal += credit_msg_delay.dbl();
-                creditMsgDelayTimeCount += 1;
-            }
-
-
-
-            delete bufferInfoMsg;
+            handleBufferInfoMsg(msg);
 
         }else{
         //***********************收到DataPkt消息***********************
-            DataPkt* datapkt = check_and_cast<DataPkt*>(msg);
-            if(datapkt->getIsHead()) {
-                int dest_id = datapkt->getDst_ppid();
-                int index = getIndex();
-                if(dest_id != index) {
-                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                        EV << ">>>>>>>>>>Message {" << datapkt << " } arrived at wrong destination at node " <<index<<"("<<ppid2plid(index)<<")<<<<<<<<<<\n";
-                        assert(dest_id == index);
-                    }
+            handleDataPkt(msg);
+
+        }
+    }
+}
+
+void Processor::handleSendMsg()
+{
+    if(!txQueue.isEmpty()){ //发送队列有数据
+        DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
+        int vcid = current_forward_msg->getVc_id();
+
+        //debug
+        if (getIndex() == 3 && simTime().dbl() > 1.000000014585) {
+
+            double rec = RecordStartTime;
+            double sim = simTime().dbl();
+            double avil = channelAvailTime().dbl();
+            int a = 0;
+
+        }
+
+        if(channelAvailTime() <= simTime() && BufferConnectCredit[vcid] != 0) { //发送端口空闲，下一个节点有buffer接受此flit
+            txQueue.pop();
+            forwardMessage(current_forward_msg);
+            BufferConnectCredit[vcid]--; //decrement credit count
+
+            if (simTime().dbl() > RecordStartTime) {
+                numFlitSent++;
+            }
+            if (current_forward_msg->getIsTail() == true) {
+                if (simTime().dbl() > RecordStartTime) {
+                    numPackageSent++;
                 }
             }
 
+            if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
+            }
+        }
 
-            // Message arrived
-            // 由于链路分配的单位是flit而非packet，所以会出现不同虚通道的body flit接连到达
-            int current_ppid = getIndex();
-            int hopcount = datapkt->getHopCount();
-            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                EV << ">>>>>>>>>>Message {" << datapkt << " } arrived after " << hopcount <<
-                        " hops at node "<<current_ppid<<"("<<ppid2plid(current_ppid)<<")<<<<<<<<<<\n";
+    }
+
+    scheduleAt(std::max(simTime()+CLK_CYCLE,channelAvailTime()),selfMsgSendMsg);
+}
+
+void Processor::handleGenMsg()
+{
+//            if(getIndex() == 0){ //processor产生msg的模式,需要改进
+    if (true) {
+
+        //**********************产生flit*****************************
+        if(txQueue.getLength() + FlitLength <= ProcessorBufferDepth){ //要产生新的Packet(head flit + body flit)，同时buffer又有空间来存储
+            int bestVCID = generateBestVCID();
+            for(int i = 0; i < FlitLength; i++) {
+                if(i == 0) {
+                    DataPkt* msg = generateMessage(true, false, FlitLength, i, bestVCID);
+                    txQueue.insert(msg);
+                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                        checkGenMsg(msg);
+                    }
+                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Head Flit>>>>>>>>>>\n";
+                        EV << msg << endl;
+                    }
+                } else if(i == FlitLength - 1) {
+                    DataPkt* msg = generateMessage(false, true, FlitLength, i, bestVCID);
+                    txQueue.insert(msg);
+                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                        checkGenMsg(msg);
+                    }
+                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Tail Flit>>>>>>>>>>\n";
+                        EV << msg << endl;
+                    }
+                } else {
+                    DataPkt* msg = generateMessage(false, false, FlitLength, i, bestVCID);
+                    txQueue.insert(msg);
+                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                        checkGenMsg(msg);
+                    }
+                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Body Flit>>>>>>>>>>\n";
+                        EV << msg << endl;
+                    }
+                }
+
             }
 
-            // update statistics.
+        }else{//要产生新的package，但是buffer空间不够，drop掉该package
             if (simTime().dbl() > RecordStartTime) {
-                numFlitReceived++;
-                flitByHop += hopcount + 1; //包含最后一跳路由器到processor
+                numPktDropped++;
             }
+            //如果drop了一个packet的，则置为1，进入下面的定时时，
+            //会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
+            dropFlag = true;
+
+        }
+
+        //**********************产生定时消息*****************************
+        //package之间的时间间隔为泊松分布或均匀分布
+        if(dropFlag == false){
+
+#ifdef POISSON_DIST //泊松分布
+            double expTime = Poisson();
+            if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                EV << "Poisson interval: "<<expTime<<"\n";
+            }
+            scheduleAt(simTime()+expTime,selfMsgGenMsg);
+#else //均匀分布
+            double unitime = Uniform();
+            if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                EV << "Uniform interval: "<<unitime<<"\n";
+            }
+            scheduleAt(simTime()+unitime,selfMsgGenMsg);
+#endif
+
+        }else{ //dropFlag == true
+            scheduleAt(simTime() + CLK_CYCLE * FlitLength, selfMsgGenMsg);
+            dropFlag = false;
+        }
+
+    }
+}
+
+void Processor::handleBufferInfoMsg(cMessage *msg)
+{
+    BufferInfoMsg *bufferInfoMsg = check_and_cast<BufferInfoMsg*>(msg);
+    int from_port=bufferInfoMsg->getFrom_port();
+    int vcid = bufferInfoMsg->getVcid();
+    BufferConnectCredit[vcid]++; //increment credit count
+
+    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+        EV<<"Receiving bufferInfoMsg >> PROCESSOR: "<<getIndex()<<"("<<ppid2plid(getIndex())<<"), INPORT: "<<from_port<<
+            ", Received MSG: { "<<bufferInfoMsg<<" }\n";
+        EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
+    }
+
+    simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
+    if (simTime().dbl() > RecordStartTime) {
+//                creditMsgDelayTime.record(credit_msg_delay.dbl());
+        creditMsgDelayTimeTotal += credit_msg_delay.dbl();
+        creditMsgDelayTimeCount += 1;
+    }
+
+
+
+    delete bufferInfoMsg;
+}
+
+void Processor::handleDataPkt(cMessage *msg)
+{
+    DataPkt* datapkt = check_and_cast<DataPkt*>(msg);
+    if(datapkt->getIsHead()) {
+        int dest_id = datapkt->getDst_ppid();
+        int index = getIndex();
+        if(dest_id != index) {
+            if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                EV << ">>>>>>>>>>Message {" << datapkt << " } arrived at wrong destination at node " <<index<<"("<<ppid2plid(index)<<")<<<<<<<<<<\n";
+                assert(dest_id == index);
+            }
+        }
+    }
+
+
+    // Message arrived
+    // 由于链路分配的单位是flit而非packet，所以会出现不同虚通道的body flit接连到达
+    int current_ppid = getIndex();
+    int hopcount = datapkt->getHopCount();
+    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+        EV << ">>>>>>>>>>Message {" << datapkt << " } arrived after " << hopcount <<
+                " hops at node "<<current_ppid<<"("<<ppid2plid(current_ppid)<<")<<<<<<<<<<\n";
+    }
+
+    // update statistics.
+    if (simTime().dbl() > RecordStartTime) {
+        numFlitReceived++;
+        flitByHop += hopcount + 1; //包含最后一跳路由器到processor
+    }
 
 //            if (datapkt->getIsHead() == true) {
 //                packageDelayCount = datapkt->getFlitCount();
@@ -268,31 +288,28 @@ void Processor::handleMessage(cMessage *msg)
 //                packageDelayTime.record(simTime().dbl() - headFlitGenTime);
 //                numPackageReceived++;
 //            }
-            if(datapkt->getIsTail() == true) {
-                if (simTime().dbl() > RecordStartTime) {
-                    numPackageReceived++;
+    if(datapkt->getIsTail() == true) {
+        if (simTime().dbl() > RecordStartTime) {
+            numPackageReceived++;
 //                    packageDelayTime.record(simTime().dbl() - datapkt->getPackageGenTime());
-                    packetDelayTimeTotal += simTime().dbl() - datapkt->getPackageGenTime();
-                    packetDelayTimeCount += 1;
-                }
-
-            }
-            if (simTime().dbl() > RecordStartTime) {
-//                flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
-                flitDelayTimeTotal += simTime().dbl() - datapkt->getCreationTime().dbl();
-                flitDelayTimeCount += 1;
-//                hopCountVector.record(hopcount);
-                hopCountTotal += hopcount;
-                hopCountCount += 1;
-            }
-
-
-            delete datapkt;
-
+            packetDelayTimeTotal += simTime().dbl() - datapkt->getPackageGenTime();
+            packetDelayTimeCount += 1;
         }
 
     }
+    if (simTime().dbl() > RecordStartTime) {
+//                flitDelayTime.record(simTime().dbl() - datapkt->getCreationTime());
+        flitDelayTimeTotal += simTime().dbl() - datapkt->getCreationTime().dbl();
+        flitDelayTimeCount += 1;
+//                hopCountVector.record(hopcount);
+        hopCountTotal += hopcount;
+        hopCountCount += 1;
+    }
+
+
+    delete datapkt;
 }
+
 
 void Processor::checkGenMsg(DataPkt* datapkt) {
     EV << "From Processor: " << getIndex() << "(" << ppid2plid(getIndex()) << "), flitCount = " <<datapkt->getFlitCount()

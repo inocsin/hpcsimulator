@@ -85,7 +85,6 @@ void Router::handleMessage(cMessage *msg)
 
             handleInputDataPkt(msg);
 
-
         }//end of DataPkt
 
     } // end of Not self msg
