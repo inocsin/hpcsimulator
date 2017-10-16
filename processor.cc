@@ -110,16 +110,6 @@ void Processor::handleSendMsg()
         DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
         int vcid = current_forward_msg->getVc_id();
 
-        //debug
-        if (getIndex() == 3 && simTime().dbl() > 1.000000014585) {
-
-            double rec = RecordStartTime;
-            double sim = simTime().dbl();
-            double avil = channelAvailTime().dbl();
-            int a = 0;
-
-        }
-
         if(channelAvailTime() <= simTime() && BufferConnectCredit[vcid] != 0) { //发送端口空闲，下一个节点有buffer接受此flit
             txQueue.pop();
             forwardMessage(current_forward_msg);
