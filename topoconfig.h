@@ -3,13 +3,15 @@
 //***********topology parameters***********
 #define PortNum 4
 #define ProcessorNum 16
+//#define PortNum 16
+//#define ProcessorNum 16
 #define LinkNum 96
 #define PacketSize 16
 #define FlitSize 4
 #define FlitLength 4
 #define VC 3
-#define BufferDepth 4 * FlitLength
-#define ProcessorBufferDepth 4 * FlitLength
+#define BufferDepth 32 * FlitLength
+#define ProcessorBufferDepth 32 * FlitLength
 #define CrossPointBufferDepth 8
 #define FREQ 3500000000.0
 #define OutBufferDepth 3

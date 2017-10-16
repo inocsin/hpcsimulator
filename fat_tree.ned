@@ -21,7 +21,7 @@ network Fat_tree
 		channel Channel extends ned.DatarateChannel
 		{
 			delay = 5.0ns;
-			datarate = 112Gbps;
+//			datarate = 112Gbps;
 		}
 	submodules:
 		router[20]: FtRouter {

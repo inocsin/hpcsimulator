@@ -508,6 +508,8 @@ void Processor::finish()
 
     if(getIndex() == 0) {
         recordScalar("timeCount", timeCount);
+        recordScalar("processorNum", ProcessorNum);
+        recordScalar("flitLength", FlitLength);
     }
 
 }
