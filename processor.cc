@@ -130,7 +130,11 @@ void Processor::handleSendMsg()
         }
 
     }
-
+//    if(channelAvailTime() > simTime()) {
+//        scheduleAt(channelAvailTime(), selfMsgSendMsg);
+//    } else {
+//        scheduleAt(simTime()+CLK_CYCLE, selfMsgSendMsg);
+//    }
     scheduleAt(std::max(simTime()+CLK_CYCLE,channelAvailTime()),selfMsgSendMsg);
 }
 
@@ -143,38 +147,22 @@ void Processor::handleGenMsg()
         if(txQueue.getLength() + FlitLength <= ProcessorBufferDepth){ //要产生新的Packet(head flit + body flit)，同时buffer又有空间来存储
             int bestVCID = generateBestVCID();
             for(int i = 0; i < FlitLength; i++) {
+                DataPkt* msg = nullptr;
                 if(i == 0) {
-                    DataPkt* msg = generateMessage(true, false, FlitLength, i, bestVCID);
-                    txQueue.insert(msg);
-                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        checkGenMsg(msg);
-                    }
-                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Head Flit>>>>>>>>>>\n";
-                        EV << msg << endl;
-                    }
+                    msg = generateMessage(true, false, FlitLength, i, bestVCID);
                 } else if(i == FlitLength - 1) {
-                    DataPkt* msg = generateMessage(false, true, FlitLength, i, bestVCID);
-                    txQueue.insert(msg);
-                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        checkGenMsg(msg);
-                    }
-                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Tail Flit>>>>>>>>>>\n";
-                        EV << msg << endl;
-                    }
+                    msg = generateMessage(false, true, FlitLength, i, bestVCID);
                 } else {
-                    DataPkt* msg = generateMessage(false, false, FlitLength, i, bestVCID);
-                    txQueue.insert(msg);
-                    if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-                        checkGenMsg(msg);
-                    }
-                    if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
-                        EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Body Flit>>>>>>>>>>\n";
-                        EV << msg << endl;
-                    }
+                    msg = generateMessage(false, false, FlitLength, i, bestVCID);
                 }
-
+                txQueue.insert(msg);
+                if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
+                    checkGenMsg(msg);
+                }
+                if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
+                    EV << "<<<<<<<<<<Processor: "<<getIndex()<<"("<<ppid2plid(getIndex())<<") is generating Flit>>>>>>>>>>\n";
+                    EV << msg << endl;
+                }
             }
 
         }else{//要产生新的package，但是buffer空间不够，drop掉该package
@@ -209,7 +197,6 @@ void Processor::handleGenMsg()
             scheduleAt(simTime() + CLK_CYCLE * FlitLength, selfMsgGenMsg);
             dropFlag = false;
         }
-
     }
 }
 

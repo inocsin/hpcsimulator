@@ -1,4 +1,4 @@
-simple FtRouter
+simple HighRadixRouter
 {
 	parameters:
 
@@ -21,10 +21,10 @@ network Fat_tree
 		channel Channel extends ned.DatarateChannel
 		{
 			delay = 5.0ns;
-//			datarate = 112Gbps;
+			datarate = 1024.0Gbps;
 		}
 	submodules:
-		router[20]: FtRouter {
+		router[20]: HighRadixRouter {
 
 		}
 		processor[16]: FtProcessor{
