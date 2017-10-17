@@ -186,10 +186,7 @@ void HighRadixRouter::step4_5_SA_ST()
                 assert(RCCrossPointVCState[inport][i][in_vc] != -1);
                 // this out_vc is allocated due to RCInputVCState != -1
                 int out_vc = RCCrossPointVCState[inport][i][in_vc];
-                if(VAOutputVCState[outport][out_vc] != inport * VC + in_vc) {
-                    int a = 0;
-                    int b = 0;
-                }
+
                 assert(VAOutputVCState[outport][out_vc] == inport * VC + in_vc);
                 if(OutputBuffer[i][out_vc][OutBufferDepth-1] == nullptr) { // buffer available
                     DataPkt* current_pkt = CrosspointBuffer[inport][outport][in_vc][0];
