@@ -26,49 +26,6 @@ void HighRadixRouter::initialize()
     }
 }
 
-//void HighRadixRouter::handleAllocMessage(cMessage *msg)
-//{
-//
-//
-//    scheduleAt(simTime()+CLK_CYCLE, selfMsgAlloc);
-//
-//    // calculate adjacent routers' input buffer occupancy
-//    calcInputBufferOccupancy();
-//
-//    //Step 2. Routing Logic
-//    //计算每个packet的输出端口及输出vcid
-//    step2RoutingLogic();
-//
-//    //开始对部分模块进行计时
-//    t_start_r = clock();
-//
-//    //Step 3,4,5 SA && VCA (this two stages are parallel in high-radix router)
-//    //Step 3.1 VCA
-//    step3VCAllocation();
-//
-//    //Step 4,5 SA and ST
-//    step4_5_SA_ST();
-//
-//
-//    //结束部分模块的计时
-//    t_end_r = clock();
-//    if (simTime().dbl() > RecordStartTime) {
-//        if(t_end_r - t_start_r > t_max_r) {
-//            t_max_r = t_end_r - t_start_r;
-//        }
-//        t_router += t_end_r - t_start_r;
-//    }
-//
-//    //Step 7. Forward bufferInfoMsg Message
-//    step7ForwardBufferInfoMsg();
-//
-//    //Step 6. Forward Data Message
-//    step6ForwardDataMsg();
-//
-//
-//
-//}
-
 void HighRadixRouter::step3VCAllocation()
 {
     // Step 3.1 output vc computation
