@@ -15,14 +15,12 @@ Router::Router(){
     selfMsgAlloc=nullptr;
 }
 
-
 Router::~Router(){
     cancelAndDelete(selfMsgAlloc);
 }
 
 void Router::initialize()
 {
-
 
     //对Buffer进行初始化
     for(int i = 0; i < PortNum; i++) {
@@ -45,7 +43,6 @@ void Router::initialize()
         }
     }
 
-
     //对selfMsg进行初始化
     selfMsgAlloc = new cMessage("selfMsgAlloc");
     scheduleAt(Sim_Start_Time, selfMsgAlloc);
@@ -60,6 +57,8 @@ void Router::initialize()
     inputBufferOccupancy = 0.0;
     inputBufferEmptyTimes = 0.0;
     inputBufferFullTimes = 0.0;
+    channelUnavailTimes = 0.0;
+    bufferChannelUnavialTimes = 0.0;
 
 }
 
@@ -133,13 +132,17 @@ void Router::handleAllocMessage(cMessage *msg)
         t_router += t_end_r - t_start_r;
     }
 
+    //Notes:
+    //由于DataMsg和BufferMsg占用同一个信道，BufferInfoMsg的大小为0Byte，DataMsg大小>0Byte，因此，如果先发送
+    //DataMsg，则信道被占用，channelAvailTime()>simTime()，导致BufferInfoMsg无法发送。相反，如果先发送
+    //0Byte大小的BufferInfoMsg，数据的TransmissionTime = 0 / Bandwidth = 0, 因此channelAvailTime()<=simTime(),
+    //不会占用信道，DataMsg也可以正常发送。因此必须保证BufferInfoMsg在DataMsg之前发送
 
-    //Step 6. Forward Data Message & Shift OutputBuffer
-    step6ForwardDataMsg();
+    //Step 6. Forward bufferInfoMsg Message
+    step6ForwardBufferInfoMsg();
 
-    //Step 7. Forward bufferInfoMsg Message
-    step7ForwardBufferInfoMsg();
-
+    //Step 7. Forward Data Message & Shift OutputBuffer
+    step7ForwardDataMsg();
 
 }
 
@@ -313,11 +316,27 @@ void Router::step4_5_SA_ST() {
     }
 }
 
+void Router::step6ForwardBufferInfoMsg()
+{
+    for(int i = 0; i < PortNum; i++) {
+        if(channelAvailTime(i) > simTime() && simTime().dbl() > RecordStartTime) {
+            bufferChannelUnavialTimes += 1;
+        }
+        if(bufTxQueue[i].isEmpty() || channelAvailTime(i) > simTime()) continue;
+        BufferInfoMsg* bufferInfoMsg = (BufferInfoMsg*) bufTxQueue[i].front();
+        bufTxQueue[i].pop(); //注意，先pop再发送
+        //发送bufferInfoMsg
+        forwardBufferInfoMsg(bufferInfoMsg, i);
+    }
+}
 
-void Router::step6ForwardDataMsg()
+void Router::step7ForwardDataMsg()
 {
     //发送数据，需要检查信道是否空闲以及
     for(int i = 0; i < PortNum; i++) {
+        if(channelAvailTime(i) > simTime() && simTime().dbl() > RecordStartTime) {
+            channelUnavailTimes += 1;
+        }
         if(channelAvailTime(i) <= simTime()) {
             bool flag = false;
             for(int j = 0; j < VC && flag == false; j++) {
@@ -356,19 +375,6 @@ void Router::step6ForwardDataMsg()
     }
 }
 
-
-
-void Router::step7ForwardBufferInfoMsg()
-{
-    for(int i = 0; i < PortNum; i++) {
-        if(bufTxQueue[i].isEmpty() || channelAvailTime(i) > simTime()) continue;
-        BufferInfoMsg* bufferInfoMsg = (BufferInfoMsg*) bufTxQueue[i].front();
-        bufTxQueue[i].pop(); //注意，先pop再发送
-        //发送bufferInfoMsg
-        forwardBufferInfoMsg(bufferInfoMsg, i);
-    }
-}
-
 void Router::handleBufferInfoMessage(cMessage *msg)
 {
     //收到的消息为buffer状态消息，更新BufferConnectCredit[PortNum][VC]
@@ -381,6 +387,7 @@ void Router::handleBufferInfoMessage(cMessage *msg)
         EV<<"Receiving bufferInfoMsg >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<from_port<<
             ", Received MSG: { "<<bufferInfoMsg<<" }\n";
         EV<<"BufferConnectCredit["<<from_port<<"]["<<vcid<<"]="<<BufferConnectCredit[from_port][vcid]<<"\n";
+        EV<<"Msg transmition time: "<<simTime().dbl() - bufferInfoMsg->getTransmit_start() << "\n";
     }
     delete bufferInfoMsg;
 }
@@ -407,6 +414,7 @@ void Router::handleInputDataPkt(cMessage *msg)
     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
         EV<<"Step 1. Input Buffer >> ROUTER: "<<getIndex()<<"("<<swpid2swlid(getIndex())<<"), INPORT: "<<input_port<<
             ", VCID: "<<vc_id<<", Received MSG: { "<<datapkt<<" }\n";
+        EV<<"Msg transmition time: "<<simTime().dbl() - datapkt->getTransmit_start() << "\n";
     }
 }
 
@@ -426,6 +434,7 @@ void Router::forwardMessage(DataPkt *msg, int out_port_id)
     strcat(str1,"$o");
     //EV<<"k="<<k<<" str1="<<str1<<" str2="<<str2<<"\n";
     msg->setFrom_router_port(getNextRouterPort(k));//设置接受该msg的Router的port端口号
+    msg->setTransmit_start(simTime().dbl());
     send(msg,str1);
     int cur_swpid=getIndex();//当前路由器的id
     int cur_swlid=swpid2swlid(cur_swpid);
@@ -446,6 +455,7 @@ void Router::forwardBufferInfoMsg(BufferInfoMsg *msg, int out_port_id){
     strcat(str1,"$o");
     //EV<<"k="<<k<<" str1="<<str1<<" str2="<<str2<<"\n";
     msg->setFrom_port(getNextRouterPort(k));//设置接受该msg的Router的port端口号
+    msg->setTransmit_start(simTime().dbl());
     send(msg,str1);
     int cur_swpid=getIndex();//当前路由器的id
     int cur_swlid=swpid2swlid(cur_swpid);
@@ -582,7 +592,8 @@ void Router::finish()
     recordScalar("inputBufferOccupancy", inputBufferOccupancy);
     recordScalar("inputBufferFullTimes", inputBufferFullTimes / (timeCount * VC * port_num));
     recordScalar("inputBufferEmptyTimes", inputBufferEmptyTimes / (timeCount * VC * port_num));
-//    recordScalar("totalInputBufferOccupancy", totalInputBufferOccupancy);
+    recordScalar("channelUnavailTimes", channelUnavailTimes / (timeCount * PortNum));
+    recordScalar("bufferChannelUnavialTimes", bufferChannelUnavialTimes / (timeCount * PortNum));
 
 }
 

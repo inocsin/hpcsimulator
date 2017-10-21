@@ -106,6 +106,8 @@ class Router : public cSimpleModule
     double inputBufferOccupancy; // input buffer占有率
     double inputBufferEmptyTimes; // buffer空闲的时段
     double inputBufferFullTimes;
+    double channelUnavailTimes;
+    double bufferChannelUnavialTimes;
 
   public:
     Router();
@@ -121,8 +123,9 @@ class Router : public cSimpleModule
     virtual void step2RoutingLogic(); // Step 2, routing logic
     virtual void step3VCAllocation(); // Step 3, VCAllocation
     virtual void step4_5_SA_ST();  // Step 4,5 SA, ST
-    virtual void step6ForwardDataMsg();
-    virtual void step7ForwardBufferInfoMsg();
+    virtual void step6ForwardBufferInfoMsg();
+    virtual void step7ForwardDataMsg();
+
 
 
     //utility functions

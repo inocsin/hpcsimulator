@@ -50,6 +50,7 @@ void Processor::initialize()
     inputBufferOccupancy = 0.0;
     inputBufferEmptyTimes = 0.0;
     inputBufferFullTimes = 0.0;
+    channelUnavailTimes = 0.0;
 
 //    hopCountVector.setName("hopCount");
 //    flitDelayTime.setName("flitDelayTime");
@@ -109,7 +110,9 @@ void Processor::handleSendMsg()
     if(!txQueue.isEmpty()){ //发送队列有数据
         DataPkt* current_forward_msg = (DataPkt*) txQueue.front();
         int vcid = current_forward_msg->getVc_id();
-
+        if(channelAvailTime() > simTime() && simTime().dbl() > RecordStartTime) {
+            channelUnavailTimes += 1;
+        }
         if(channelAvailTime() <= simTime() && BufferConnectCredit[vcid] != 0) { //发送端口空闲，下一个节点有buffer接受此flit
             txQueue.pop();
             forwardMessage(current_forward_msg);
@@ -140,7 +143,7 @@ void Processor::handleSendMsg()
 
 void Processor::handleGenMsg()
 {
-//            if(getIndex() == 0){ //processor产生msg的模式,需要改进
+//    if(getIndex() == 0){ //processor产生msg的模式,需要改进
     if (true) {
 
         //**********************产生flit*****************************
@@ -148,6 +151,7 @@ void Processor::handleGenMsg()
             int bestVCID = generateBestVCID();
             for(int i = 0; i < FlitLength; i++) {
                 DataPkt* msg = nullptr;
+
                 if(i == 0) {
                     msg = generateMessage(true, false, FlitLength, i, bestVCID);
                 } else if(i == FlitLength - 1) {
@@ -155,6 +159,7 @@ void Processor::handleGenMsg()
                 } else {
                     msg = generateMessage(false, false, FlitLength, i, bestVCID);
                 }
+
                 txQueue.insert(msg);
                 if(Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
                     checkGenMsg(msg);
@@ -172,7 +177,6 @@ void Processor::handleGenMsg()
             //如果drop了一个packet的，则置为1，进入下面的定时时，
             //会以一个时钟周期作为定时单位，而不是泊松或自相似的时间间隔
             dropFlag = true;
-
         }
 
         //**********************产生定时消息*****************************
@@ -211,6 +215,7 @@ void Processor::handleBufferInfoMsg(cMessage *msg)
         EV<<"Receiving bufferInfoMsg >> PROCESSOR: "<<getIndex()<<"("<<ppid2plid(getIndex())<<"), INPORT: "<<from_port<<
             ", Received MSG: { "<<bufferInfoMsg<<" }\n";
         EV<<"BufferConnectCredit["<<vcid<<"]="<<BufferConnectCredit[vcid]<<"\n";
+        EV<<"Msg transmition time: "<<simTime().dbl() - bufferInfoMsg->getTransmit_start() << "\n";
     }
 
     simtime_t credit_msg_delay = bufferInfoMsg->getArrivalTime() - bufferInfoMsg->getCreationTime();
@@ -219,8 +224,6 @@ void Processor::handleBufferInfoMsg(cMessage *msg)
         creditMsgDelayTimeTotal += credit_msg_delay.dbl();
         creditMsgDelayTimeCount += 1;
     }
-
-
 
     delete bufferInfoMsg;
 }
@@ -247,6 +250,7 @@ void Processor::handleDataPkt(cMessage *msg)
     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
         EV << ">>>>>>>>>>Message {" << datapkt << " } arrived after " << hopcount <<
                 " hops at node "<<current_ppid<<"("<<ppid2plid(current_ppid)<<")<<<<<<<<<<\n";
+        EV<<"Msg transmition time: "<<simTime().dbl() - datapkt->getTransmit_start() << "\n";
     }
 
     // update statistics.
@@ -284,7 +288,6 @@ void Processor::handleDataPkt(cMessage *msg)
         hopCountTotal += hopcount;
         hopCountCount += 1;
     }
-
 
     delete datapkt;
 }
@@ -382,7 +385,6 @@ simtime_t Processor::channelAvailTime(){
     cChannel* txChannel = gate("port$o")->getTransmissionChannel();
     simtime_t txFinishTime = txChannel->getTransmissionFinishTime();
     return txFinishTime;
-
 }
 
 void Processor::calcInputBufferOccupancy()
@@ -404,6 +406,7 @@ void Processor::forwardMessage(DataPkt *msg)
 {
 
     msg->setFrom_router_port(getNextRouterPortP());// 设置收到该信息路由器的端口号
+    msg->setTransmit_start(simTime().dbl());
     send(msg,"port$o");
     if (Verbose >= VERBOSE_DEBUG_MESSAGES) {
         EV << "Forwarding message { " << msg << " } from processor "<<getIndex()<<"("<<ppid2plid(getIndex())<<") to router, VCID = "<<msg->getVc_id()<<"\n";
@@ -449,7 +452,6 @@ double Processor::Uniform() {
     return time;
 }
 
-
 void Processor::finish()
 {
     // This function is called by OMNeT++ at the end of the simulation.
@@ -482,6 +484,7 @@ void Processor::finish()
     recordScalar("processorInputBufferOccupancy", inputBufferOccupancy);
     recordScalar("processorInputBufferFullTimes", inputBufferFullTimes / (timeCount * VC));
     recordScalar("processorInputBufferEmptyTimes", inputBufferEmptyTimes / (timeCount * VC));
+    recordScalar("channelUnavailTimes", channelUnavailTimes);
 
     if(getIndex() == 0) {
         recordScalar("timeCount", timeCount);

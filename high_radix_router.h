@@ -26,6 +26,9 @@ using namespace omnetpp;
  * 同一个输出outport vc。
  * VACrossPointVCState代表crosspoint中vc在vca仲裁的结果，true表示该vc成功获得output vc
  *
+ * High radix router
+ * Kim J, Dally W J, Towles B, et al. Microarchitecture of a high radix router[C]
+ * Computer Architecture, 2005. ISCA'05. Proceedings. 32nd International Symposium on. IEEE, 2005: 420-431.
  *
  *
  */
@@ -46,7 +49,7 @@ class HighRadixRouter : public FtRouter
   protected:
     //handle message functions, different in routers
     virtual void initialize() override;
-    virtual void handleAllocMessage(cMessage *msg) override;  // RC, VCA, SA, ST in this function
+//    virtual void handleAllocMessage(cMessage *msg) override;  // RC, VCA, SA, ST in this function
     virtual void step3VCAllocation() override;
     virtual void step4_5_SA_ST() override;  // Step 4,5 SA, ST
 

@@ -10,8 +10,8 @@
 #define FlitSize 4
 #define FlitLength 4
 #define VC 3
-#define BufferDepth 256 * FlitLength
-#define ProcessorBufferDepth 256 * FlitLength
+#define BufferDepth 512 * FlitLength
+#define ProcessorBufferDepth 512 * FlitLength
 #define CrossPointBufferDepth 8
 #define FREQ 3500000000.0
 #define OutBufferDepth 3

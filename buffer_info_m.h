@@ -38,6 +38,9 @@
  *     //bool BufferAvail[]; //保存与from_port端口相连的路由器对应端口的buffer状态，可变长度数组
  *     int vcid; //from upstream router, decrement credit count
  * 
+ *     //debug 
+ *     double transmit_start;
+ * 
  * }
  * </pre>
  */
@@ -46,6 +49,7 @@ class BufferInfoMsg : public ::omnetpp::cMessage
   protected:
     int from_port;
     int vcid;
+    double transmit_start;
 
   private:
     void copy(const BufferInfoMsg& other);
@@ -68,6 +72,8 @@ class BufferInfoMsg : public ::omnetpp::cMessage
     virtual void setFrom_port(int from_port);
     virtual int getVcid() const;
     virtual void setVcid(int vcid);
+    virtual double getTransmit_start() const;
+    virtual void setTransmit_start(double transmit_start);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const BufferInfoMsg& obj) {obj.parsimPack(b);}

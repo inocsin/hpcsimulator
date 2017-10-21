@@ -174,6 +174,7 @@ DataPkt::DataPkt(const char *name, int kind) : ::omnetpp::cPacket(name,kind)
     this->vc_id = 0;
     this->hopCount = 0;
     this->from_router_port = 0;
+    this->transmit_start = 0;
 }
 
 DataPkt::DataPkt(const DataPkt& other) : ::omnetpp::cPacket(other)
@@ -204,6 +205,7 @@ void DataPkt::copy(const DataPkt& other)
     this->vc_id = other.vc_id;
     this->hopCount = other.hopCount;
     this->from_router_port = other.from_router_port;
+    this->transmit_start = other.transmit_start;
 }
 
 void DataPkt::parsimPack(omnetpp::cCommBuffer *b) const
@@ -218,6 +220,7 @@ void DataPkt::parsimPack(omnetpp::cCommBuffer *b) const
     doParsimPacking(b,this->vc_id);
     doParsimPacking(b,this->hopCount);
     doParsimPacking(b,this->from_router_port);
+    doParsimPacking(b,this->transmit_start);
 }
 
 void DataPkt::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -232,6 +235,7 @@ void DataPkt::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->vc_id);
     doParsimUnpacking(b,this->hopCount);
     doParsimUnpacking(b,this->from_router_port);
+    doParsimUnpacking(b,this->transmit_start);
 }
 
 int DataPkt::getFlitCount() const
@@ -324,6 +328,16 @@ void DataPkt::setFrom_router_port(int from_router_port)
     this->from_router_port = from_router_port;
 }
 
+double DataPkt::getTransmit_start() const
+{
+    return this->transmit_start;
+}
+
+void DataPkt::setTransmit_start(double transmit_start)
+{
+    this->transmit_start = transmit_start;
+}
+
 class DataPktDescriptor : public omnetpp::cClassDescriptor
 {
   private:
@@ -388,7 +402,7 @@ const char *DataPktDescriptor::getProperty(const char *propertyname) const
 int DataPktDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 9+basedesc->getFieldCount() : 9;
+    return basedesc ? 10+basedesc->getFieldCount() : 10;
 }
 
 unsigned int DataPktDescriptor::getFieldTypeFlags(int field) const
@@ -409,8 +423,9 @@ unsigned int DataPktDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<9) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<10) ? fieldTypeFlags[field] : 0;
 }
 
 const char *DataPktDescriptor::getFieldName(int field) const
@@ -431,8 +446,9 @@ const char *DataPktDescriptor::getFieldName(int field) const
         "vc_id",
         "hopCount",
         "from_router_port",
+        "transmit_start",
     };
-    return (field>=0 && field<9) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<10) ? fieldNames[field] : nullptr;
 }
 
 int DataPktDescriptor::findField(const char *fieldName) const
@@ -448,6 +464,7 @@ int DataPktDescriptor::findField(const char *fieldName) const
     if (fieldName[0]=='v' && strcmp(fieldName, "vc_id")==0) return base+6;
     if (fieldName[0]=='h' && strcmp(fieldName, "hopCount")==0) return base+7;
     if (fieldName[0]=='f' && strcmp(fieldName, "from_router_port")==0) return base+8;
+    if (fieldName[0]=='t' && strcmp(fieldName, "transmit_start")==0) return base+9;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -469,8 +486,9 @@ const char *DataPktDescriptor::getFieldTypeString(int field) const
         "int",
         "int",
         "int",
+        "double",
     };
-    return (field>=0 && field<9) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<10) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **DataPktDescriptor::getFieldPropertyNames(int field) const
@@ -532,6 +550,7 @@ std::string DataPktDescriptor::getFieldValueAsString(void *object, int field, in
         case 6: return long2string(pp->getVc_id());
         case 7: return long2string(pp->getHopCount());
         case 8: return long2string(pp->getFrom_router_port());
+        case 9: return double2string(pp->getTransmit_start());
         default: return "";
     }
 }
@@ -555,6 +574,7 @@ bool DataPktDescriptor::setFieldValueAsString(void *object, int field, int i, co
         case 6: pp->setVc_id(string2long(value)); return true;
         case 7: pp->setHopCount(string2long(value)); return true;
         case 8: pp->setFrom_router_port(string2long(value)); return true;
+        case 9: pp->setTransmit_start(string2double(value)); return true;
         default: return false;
     }
 }

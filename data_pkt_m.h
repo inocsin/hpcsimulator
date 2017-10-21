@@ -48,6 +48,9 @@
  *     int hopCount = 0;
  *     int from_router_port; //记录从当前路由器的哪一个端口收到该msg，由上一个路由器计算出
  * 
+ *     //debug message
+ *     double transmit_start;
+ * 
  * 
  * }
  * </pre>
@@ -64,6 +67,7 @@ class DataPkt : public ::omnetpp::cPacket
     int vc_id;
     int hopCount;
     int from_router_port;
+    double transmit_start;
 
   private:
     void copy(const DataPkt& other);
@@ -100,6 +104,8 @@ class DataPkt : public ::omnetpp::cPacket
     virtual void setHopCount(int hopCount);
     virtual int getFrom_router_port() const;
     virtual void setFrom_router_port(int from_router_port);
+    virtual double getTransmit_start() const;
+    virtual void setTransmit_start(double transmit_start);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const DataPkt& obj) {obj.parsimPack(b);}

@@ -29,5 +29,8 @@ packet DataPkt{
 	int hopCount = 0;
 	int from_router_port; //记录从当前路由器的哪一个端口收到该msg，由上一个路由器计算出
 	
+	//debug message
+	double transmit_start;
+	
 	
 }

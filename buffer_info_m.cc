@@ -167,6 +167,7 @@ BufferInfoMsg::BufferInfoMsg(const char *name, int kind) : ::omnetpp::cMessage(n
 {
     this->from_port = 0;
     this->vcid = 0;
+    this->transmit_start = 0;
 }
 
 BufferInfoMsg::BufferInfoMsg(const BufferInfoMsg& other) : ::omnetpp::cMessage(other)
@@ -190,6 +191,7 @@ void BufferInfoMsg::copy(const BufferInfoMsg& other)
 {
     this->from_port = other.from_port;
     this->vcid = other.vcid;
+    this->transmit_start = other.transmit_start;
 }
 
 void BufferInfoMsg::parsimPack(omnetpp::cCommBuffer *b) const
@@ -197,6 +199,7 @@ void BufferInfoMsg::parsimPack(omnetpp::cCommBuffer *b) const
     ::omnetpp::cMessage::parsimPack(b);
     doParsimPacking(b,this->from_port);
     doParsimPacking(b,this->vcid);
+    doParsimPacking(b,this->transmit_start);
 }
 
 void BufferInfoMsg::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -204,6 +207,7 @@ void BufferInfoMsg::parsimUnpack(omnetpp::cCommBuffer *b)
     ::omnetpp::cMessage::parsimUnpack(b);
     doParsimUnpacking(b,this->from_port);
     doParsimUnpacking(b,this->vcid);
+    doParsimUnpacking(b,this->transmit_start);
 }
 
 int BufferInfoMsg::getFrom_port() const
@@ -224,6 +228,16 @@ int BufferInfoMsg::getVcid() const
 void BufferInfoMsg::setVcid(int vcid)
 {
     this->vcid = vcid;
+}
+
+double BufferInfoMsg::getTransmit_start() const
+{
+    return this->transmit_start;
+}
+
+void BufferInfoMsg::setTransmit_start(double transmit_start)
+{
+    this->transmit_start = transmit_start;
 }
 
 class BufferInfoMsgDescriptor : public omnetpp::cClassDescriptor
@@ -290,7 +304,7 @@ const char *BufferInfoMsgDescriptor::getProperty(const char *propertyname) const
 int BufferInfoMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 2+basedesc->getFieldCount() : 2;
+    return basedesc ? 3+basedesc->getFieldCount() : 3;
 }
 
 unsigned int BufferInfoMsgDescriptor::getFieldTypeFlags(int field) const
@@ -304,8 +318,9 @@ unsigned int BufferInfoMsgDescriptor::getFieldTypeFlags(int field) const
     static unsigned int fieldTypeFlags[] = {
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<2) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<3) ? fieldTypeFlags[field] : 0;
 }
 
 const char *BufferInfoMsgDescriptor::getFieldName(int field) const
@@ -319,8 +334,9 @@ const char *BufferInfoMsgDescriptor::getFieldName(int field) const
     static const char *fieldNames[] = {
         "from_port",
         "vcid",
+        "transmit_start",
     };
-    return (field>=0 && field<2) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<3) ? fieldNames[field] : nullptr;
 }
 
 int BufferInfoMsgDescriptor::findField(const char *fieldName) const
@@ -329,6 +345,7 @@ int BufferInfoMsgDescriptor::findField(const char *fieldName) const
     int base = basedesc ? basedesc->getFieldCount() : 0;
     if (fieldName[0]=='f' && strcmp(fieldName, "from_port")==0) return base+0;
     if (fieldName[0]=='v' && strcmp(fieldName, "vcid")==0) return base+1;
+    if (fieldName[0]=='t' && strcmp(fieldName, "transmit_start")==0) return base+2;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -343,8 +360,9 @@ const char *BufferInfoMsgDescriptor::getFieldTypeString(int field) const
     static const char *fieldTypeStrings[] = {
         "int",
         "int",
+        "double",
     };
-    return (field>=0 && field<2) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<3) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **BufferInfoMsgDescriptor::getFieldPropertyNames(int field) const
@@ -399,6 +417,7 @@ std::string BufferInfoMsgDescriptor::getFieldValueAsString(void *object, int fie
     switch (field) {
         case 0: return long2string(pp->getFrom_port());
         case 1: return long2string(pp->getVcid());
+        case 2: return double2string(pp->getTransmit_start());
         default: return "";
     }
 }
@@ -415,6 +434,7 @@ bool BufferInfoMsgDescriptor::setFieldValueAsString(void *object, int field, int
     switch (field) {
         case 0: pp->setFrom_port(string2long(value)); return true;
         case 1: pp->setVcid(string2long(value)); return true;
+        case 2: pp->setTransmit_start(string2double(value)); return true;
         default: return false;
     }
 }
