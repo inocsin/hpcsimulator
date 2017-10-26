@@ -18,15 +18,6 @@
 
 using namespace omnetpp;
 
-/**
- * This model is exciting enough so that we can collect some statistics.
- * We'll record in output vectors the hop count of every message upon arrival.
- * Output vectors are written into the omnetpp.vec file and can be visualized
- * with the Plove program.
- *
- * We also collect basic statistics (min, max, mean, std.dev.) and histogram
- * about the hop count which we'll print out at the end of the simulation.
- */
 
 enum TRAFFIC {
     UNI = 0,
