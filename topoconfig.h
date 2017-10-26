@@ -21,7 +21,8 @@
 #define Sim_Start_Time 1
 #define TimeScale 0.1
 //*************injection mode***************
-#define UNIFORM
+#define Traffic 1
+#define Hotspot 2.0
 #define LAMBDA 7
 #define INJECTION_RATE 1.0
 //*************debug infomation***************

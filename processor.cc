@@ -12,6 +12,7 @@
  */
 
 #include "processor.h"
+#include "math.h"
 #include <assert.h>
 
 Processor::Processor(){
@@ -52,11 +53,6 @@ void Processor::initialize()
     inputBufferFullTimes = 0.0;
     channelUnavailTimes = 0.0;
 
-//    hopCountVector.setName("hopCount");
-//    flitDelayTime.setName("flitDelayTime");
-//    packageDelayTime.setName("packageDelayTime");
-//    creditMsgDelayTime.setName("creditMsgDelayTime");
-
     selfMsgSendMsg = new cMessage("selfMsgSendMsg");//注意顺序，先发送buffer里面的msg，再产生新的msg，这样一个flit需要2个周期才会发出去
     scheduleAt(Sim_Start_Time, selfMsgSendMsg);
     selfMsgGenMsg = new cMessage("selfMsgGenMsg");
@@ -69,6 +65,7 @@ void Processor::initialize()
     }
 
     dropFlag = false;
+    hotspotIndex = -1;
 
 }
 
@@ -322,17 +319,17 @@ DataPkt* Processor::generateMessage(bool isHead, bool isTail, int flitCount, int
 
         // Produce source and destination address
         int current_ppid = getIndex();
-        int n = getVectorSize();//processor的数量
-        if (Verbose >= VERBOSE_DETAIL_DEBUG_MESSAGES) {
-            EV<<"There are "<< n << " processors"<<"\n";
+
+        int dst_ppid = -1;
+        switch(traffic) {
+            case UNI: dst_ppid = uni(); break;
+            case HOTSPOT: dst_ppid = hotspot(); break;
+            case TRANSPOSE: dst_ppid = transpose(); break;
+            case COMPLEMENT: dst_ppid = complement(); break;
+            case BITREVERSAL: dst_ppid = bitreversal(); break;
+            default: assert(false);
         }
-        //EV<<n<<"\n";
-#ifdef UNIFORM //均匀分布
-        int dst_ppid = intuniform(0, n-2); //均匀流量模型
-        //EV<<dst_ppid<<"\n";
-        if (dst_ppid >= current_ppid)
-            dst_ppid++;//保证不取到current_ppid
-#endif
+        assert(dst_ppid != -1);
 
         int current_plid = ppid2plid(current_ppid);
         int dst_plid = ppid2plid(dst_ppid);
@@ -494,3 +491,59 @@ void Processor::finish()
 
 }
 
+int Processor::uni() {
+    // Produce source and destination address
+    int current_ppid = getIndex();
+    int n = getVectorSize();//processor的数量
+    int dst_ppid = intuniform(0, n-2); //均匀流量模型
+    if (dst_ppid >= current_ppid)
+        dst_ppid++;//保证不取到current_ppid
+    return dst_ppid;
+
+}
+
+int Processor::hotspot() {
+    //Returns a random variate with uniform distribution in the range [a,b).
+    double unif = uniform(0.0, 10.0);
+    int ret = 0;
+    if(Hotspot > unif) {
+        if(hotspotIndex == -1) {
+            hotspotIndex = uni();
+        }
+        ret = hotspotIndex;
+    } else {
+        ret = uni();
+    }
+    return ret;
+}
+
+int Processor::transpose() {
+    int n = getIndex();
+    int len = (int) (log(ProcessorNum) / log(2));
+    int mask = ProcessorNum - 1;
+    int rightshift = len - len / 2;
+    int leftshift = len / 2;
+    int ret = ((n >> rightshift) | (n << leftshift)) & mask;
+    return ret;
+}
+
+int Processor::complement() {
+    int n = getIndex();
+    int mask = ProcessorNum - 1;
+    int ret = (~n) & mask;
+    return ret;
+}
+
+int Processor::bitreversal() {
+    int n = getIndex();
+    int len = (int) (log(ProcessorNum) / log(2));
+    int ret = 0;
+    for (; n; n >>= 1) {
+        ret = ret << 1;
+        ret |= n & 1;
+        len--;
+    }
+    ret = ret << len;
+    return ret;
+
+}

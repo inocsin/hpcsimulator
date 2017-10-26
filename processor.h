@@ -28,6 +28,13 @@ using namespace omnetpp;
  * about the hop count which we'll print out at the end of the simulation.
  */
 
+enum TRAFFIC {
+    UNI = 0,
+    HOTSPOT = 1,
+    TRANSPOSE = 2,
+    COMPLEMENT = 3,
+    BITREVERSAL = 4
+};
 
 // Processor
 class Processor : public cSimpleModule
@@ -37,26 +44,26 @@ class Processor : public cSimpleModule
     cMessage *selfMsgSendMsg;//发送flit定时，每周期都检查buffer，再发送
     cMessage *selfMsgCalcBufferOccupy;//发送计算buffer occupation的定时信号
 
+
+    bool dropFlag; //判断本轮是否drop过
+    int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
+    cQueue txQueue; //发送数据队列
+    enum TRAFFIC traffic = TRAFFIC(Traffic);
+    int hotspotIndex;  //hotspot对应的热点
+
+    //buffer scalar
+    double inputBufferOccupancy; // input buffer占有率
+    double inputBufferEmptyTimes; // buffer空闲的时段
+    double inputBufferFullTimes;
+    double channelUnavailTimes;
+
+    //network info variable
     long numFlitSent;
     long numPackageSent;
     long numFlitReceived;
     long numPackageReceived;
     long numPktDropped; //丢弃的数据包
     long flitByHop; //用于计算链路利用率, flit * Hop
-    bool dropFlag; //判断本轮是否drop过
-
-    int BufferConnectCredit[VC]; //连接Processor端口的Router的buffer的credit
-    cQueue txQueue; //发送数据队列
-    double inputBufferOccupancy; // input buffer占有率
-    double inputBufferEmptyTimes; // buffer空闲的时段
-    double inputBufferFullTimes;
-    double channelUnavailTimes;
-
-//    cOutVector hopCountVector;
-//    cOutVector flitDelayTime;
-//    cOutVector packageDelayTime;
-//    cOutVector creditMsgDelayTime;
-
     long hopCountTotal;
     int hopCountCount;
     double flitDelayTimeTotal;
@@ -99,6 +106,14 @@ class Processor : public cSimpleModule
     virtual int ppid2plid(int ppid) = 0;
     virtual int plid2ppid(int plid) = 0;
     virtual int getNextRouterPortP() = 0; //计算与processor相连的router的端口
+
+    //traffic
+    int uni();
+    int hotspot();
+    int transpose();
+    int complement();
+    int bitreversal();
+
 };
 
 //Cannot allocate abstract class
