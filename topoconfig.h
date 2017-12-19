@@ -1,28 +1,26 @@
 #ifndef TOPOCONFIG_H_TEMPLATE_
 #define TOPOCONFIG_H_TEMPLATE_
 //***********topology parameters***********
-#define PortNum 4
+#define PortNum 16
 #define ProcessorNum 16
-//#define PortNum 16
-//#define ProcessorNum 16
-#define LinkNum 96
+#define LinkNum 32
 #define PacketSize 16
 #define FlitSize 4
 #define FlitLength 4
 #define VC 3
-#define BufferDepth 512 * FlitLength
-#define ProcessorBufferDepth 512 * FlitLength
+#define BufferDepth 32 * FlitLength
+#define ProcessorBufferDepth 32 * FlitLength
 #define CrossPointBufferDepth 8
 #define FREQ 3500000000.0
-#define OutBufferDepth 3
+#define OutBufferDepth 1
 #define RecordStartTime 1.0000006
 //*************unchangable variable***************
 #define CLK_CYCLE 1/FREQ
 #define Sim_Start_Time 1
 #define TimeScale 0.1
 //*************injection mode***************
-#define Traffic 1
-#define Hotspot 2.0
+#define Traffic 4
+#define Hotspot 5.0
 #define LAMBDA 7
 #define INJECTION_RATE 1.0
 //*************debug infomation***************

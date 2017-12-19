@@ -5,12 +5,13 @@
  *      Author: Vincent
  */
 
-#include "router.h"
+#include "high_radix_router.h"
 
 //SimpleRouter
 //单个路由器，所有端口连接processor，测试路由器性能
 
-class SimpleRouter : public Router {
+//public Router, FtRouter, HighRadixRouter
+class SimpleRouter : public HighRadixRouter {
 
 protected:
     //纯虚函数，根据具体的拓扑来实现

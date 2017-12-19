@@ -19,14 +19,6 @@ simple SimpleRouter
 		inout port_13;
 		inout port_14;
 		inout port_15;
-		inout port_16;
-		inout port_17;
-		inout port_18;
-		inout port_19;
-		inout port_20;
-		inout port_21;
-		inout port_22;
-		inout port_23;
 }
 simple SimpleProcessor
 {
@@ -40,14 +32,14 @@ network Tianhe_Router
 	types:
 		channel Channel extends ned.DatarateChannel
 		{
-			delay = 0ns;
+			delay = 5ns;
 			datarate = 112Gbps;
 		}
 	submodules:
 		router[1]: SimpleRouter {
 
 		}
-		processor[24]: SimpleProcessor{
+		processor[16]: SimpleProcessor{
 
 		}
 	connections:
@@ -67,12 +59,4 @@ network Tianhe_Router
 		processor[13].port <--> Channel <--> router[0].port_13;
 		processor[14].port <--> Channel <--> router[0].port_14;
 		processor[15].port <--> Channel <--> router[0].port_15;
-		processor[16].port <--> Channel <--> router[0].port_16;
-		processor[17].port <--> Channel <--> router[0].port_17;
-		processor[18].port <--> Channel <--> router[0].port_18;
-		processor[19].port <--> Channel <--> router[0].port_19;
-		processor[20].port <--> Channel <--> router[0].port_20;
-		processor[21].port <--> Channel <--> router[0].port_21;
-		processor[22].port <--> Channel <--> router[0].port_22;
-		processor[23].port <--> Channel <--> router[0].port_23;
 }

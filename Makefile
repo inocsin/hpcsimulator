@@ -183,6 +183,9 @@ $O/simple_processor.o: simple_processor.cc \
 $O/simple_router.o: simple_router.cc \
 	buffer_info_m.h \
 	data_pkt_m.h \
+	fat_tree_topo.h \
+	ft_router.h \
+	high_radix_router.h \
 	router.h \
 	tech_power.h \
 	topoconfig.h
